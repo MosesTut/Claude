@@ -1,0 +1,31 @@
+# Timbuktoo Configuration
+
+environment: production
+
+agents:
+  concierge_tokens: 38000
+  local_expert_tokens: 15000
+  city_selection_tokens: 8000
+  model: claude-sonnet-4-5-20250929
+  temperature: 0.7
+
+cost:
+  max_trip_cost_usd: 0.80
+  vector_chunks: 35
+  enable_degradation: true
+  cache_enabled: true
+
+security:
+  encryption_enabled: true
+  mfa_required: false
+  session_timeout_minutes: 60
+  audit_logging_enabled: true
+
+database:
+  pool_size: 10
+  max_overflow: 20
+
+monitoring:
+  prometheus_enabled: true
+  prometheus_port: 9090
+  log_level: INFO

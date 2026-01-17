@@ -1,0 +1,140 @@
+# WRK.FLO Workflow Definition
+
+workflow: timbuktoo_mvp
+description: Multi-agent travel planning workflow
+version: 1.0.0
+
+trigger:
+  type: user_input
+  input_schema:
+    preferences:
+      required: true
+      type: object
+    travel_dates:
+      required: true
+      type: object
+
+nodes:
+  - id: city_selection
+    type: ai_decision
+    agent: CitySelectionAgent
+    description: Select optimal cities based on preferences
+    inputs:
+      - preferences
+      - candidate_cities
+      - weather_data
+      - events_data
+    outputs:
+      - ranked_cities
+      - selection_rationale
+    cost_limit_usd: 0.15
+    timeout_seconds: 30
+
+  - id: weather_fetch
+    type: tool
+    tool: WeatherTool
+    description: Fetch weather forecasts
+    inputs:
+      - city
+      - travel_dates
+    outputs:
+      - weather_forecast
+    cache_ttl_minutes: 60
+    timeout_seconds: 10
+
+  - id: events_fetch
+    type: tool
+    tool: EventsTool
+    description: Fetch local events
+    inputs:
+      - city
+      - travel_dates
+    outputs:
+      - events_list
+    cache_ttl_minutes: 60
+    timeout_seconds: 10
+
+  - id: local_expert
+    type: ai_knowledge
+    agent: LocalExpertAgent
+    description: Generate city guide with local knowledge
+    inputs:
+      - city_id
+      - preferences
+      - vector_chunks_limit
+    outputs:
+      - city_guide
+    cost_limit_usd: 0.25
+    timeout_seconds: 45
+
+  - id: concierge
+    type: ai_multistep
+    agent: TravelConciergeAgent
+    description: Create detailed 7-day itinerary
+    inputs:
+      - city
+      - city_guide
+      - preferences
+      - weather_data
+      - events_data
+      - travel_dates
+    outputs:
+      - itinerary
+    cost_limit_usd: 0.40
+    timeout_seconds: 60
+
+  - id: save_trip
+    type: database_write
+    description: Save trip to database
+    inputs:
+      - trip_id
+      - city_id
+      - itinerary
+      - preferences
+    outputs:
+      - trip_record
+
+  - id: feedback_listener
+    type: async_listener
+    description: Listen for user feedback
+    inputs:
+      - trip_id
+    outputs:
+      - feedback_record
+    trigger: feedback_submitted
+
+flow:
+  - start
+  - parallel:
+      - weather_fetch
+      - events_fetch
+  - city_selection
+  - local_expert
+  - concierge
+  - save_trip
+  - end
+
+error_handling:
+  strategy: graceful_degradation
+  fallback_nodes:
+    weather_fetch: mock_weather
+    events_fetch: mock_events
+  max_retries: 2
+
+monitoring:
+  metrics_enabled: true
+  audit_logging: true
+  cost_tracking: true
+
+variants:
+  control:
+    description: Balanced pacing
+    parameters:
+      pacing: balanced
+      activities_per_day: 2-3
+  slow_hidden_gems:
+    description: Slower pace with more hidden gems
+    parameters:
+      pacing: slow
+      activities_per_day: 1-2
+      prioritize_hidden_gems: true

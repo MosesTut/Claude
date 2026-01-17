@@ -1,0 +1,57 @@
+[
+  {
+    "name": "Lisbon",
+    "country": "Portugal",
+    "timezone": "Europe/Lisbon",
+    "latitude": 38.7223,
+    "longitude": -9.1393,
+    "description": "Vibrant coastal city known for its historic neighborhoods, incredible food scene, nightlife, and warm hospitality. A perfect blend of old-world charm and modern energy.",
+    "best_seasons": ["spring", "summer", "fall"],
+    "currency": "EUR",
+    "language": "Portuguese"
+  },
+  {
+    "name": "Mexico City",
+    "country": "Mexico",
+    "timezone": "America/Mexico_City",
+    "latitude": 19.4326,
+    "longitude": -99.1332,
+    "description": "Massive, energetic metropolis with world-class food, rich cultural heritage, incredible nightlife, and authentic local experiences at every turn.",
+    "best_seasons": ["spring", "fall", "winter"],
+    "currency": "MXN",
+    "language": "Spanish"
+  },
+  {
+    "name": "Bangkok",
+    "country": "Thailand",
+    "timezone": "Asia/Bangkok",
+    "latitude": 13.7563,
+    "longitude": 100.5018,
+    "description": "Dynamic city blending ancient temples, street food paradise, bustling markets, and vibrant nightlife. A sensory overload in the best way.",
+    "best_seasons": ["winter"],
+    "currency": "THB",
+    "language": "Thai"
+  },
+  {
+    "name": "Barcelona",
+    "country": "Spain",
+    "timezone": "Europe/Madrid",
+    "latitude": 41.3874,
+    "longitude": 2.1686,
+    "description": "Mediterranean gem with stunning architecture, beach culture, legendary food and drink scene, and creative energy throughout.",
+    "best_seasons": ["spring", "summer", "fall"],
+    "currency": "EUR",
+    "language": "Spanish/Catalan"
+  },
+  {
+    "name": "Tokyo",
+    "country": "Japan",
+    "timezone": "Asia/Tokyo",
+    "latitude": 35.6762,
+    "longitude": 139.6503,
+    "description": "Fascinating blend of ultra-modern and traditional, with unparalleled food culture, unique neighborhoods, and incredible attention to detail in everything.",
+    "best_seasons": ["spring", "fall"],
+    "currency": "JPY",
+    "language": "Japanese"
+  }
+]
