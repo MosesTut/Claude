@@ -42,6 +42,29 @@ Timbuktoo uses a hybrid RAG (Retrieval-Augmented Generation) + Tools + Determini
               (PostgreSQL + ChromaDB)
 ```
 
+## Multi-Tenancy & SaaS Features
+
+### Complete Multi-Tenant Architecture
+- **Schema-per-tenant isolation** for complete data security
+- **Per-tenant vector namespaces** for knowledge separation
+- **Usage quotas** enforced per subscription tier
+- **RBAC** with multi-user support per tenant
+- **Customer onboarding flow** from signup to first itinerary
+
+### Pricing Tiers
+- **Starter ($29/month)**: 10 itineraries, 6 pilot cities, email support
+- **Pro ($99/month)**: Unlimited itineraries, all cities, priority support
+- **Enterprise (Custom)**: Dedicated tenancy, SLA, SOC-2, custom features
+
+### RESTful API
+- FastAPI-powered REST API with full OpenAPI documentation
+- Onboarding endpoints (7-step flow)
+- Tenant management endpoints
+- Subscription management
+- JWT authentication
+
+See [docs/MULTI_TENANCY.md](docs/MULTI_TENANCY.md) for complete guide.
+
 ## Key Features
 
 ### Multi-Agent System
@@ -230,12 +253,14 @@ collector.collect_feedback(
 
 ## Pilot Cities
 
-The MVP includes curated data for 5 cities:
-- **Lisbon, Portugal** - Full entity data
-- **Barcelona, Spain** - City metadata
-- **Mexico City, Mexico** - City metadata
-- **Bangkok, Thailand** - City metadata
-- **Tokyo, Japan** - City metadata
+The MVP includes curated data for 6 cities:
+- **Lisbon, Portugal** - Full entity data (10 curated local spots)
+- **Barcelona, Spain** - City metadata, food & nightlife focused
+- **Mexico City, Mexico** - City metadata, tequila & culture
+- **Tokyo, Japan** - City metadata, coffee & precision
+- **New York City, USA** - City metadata, luxury dining & bars
+
+**Selection Criteria**: Maximize diversity in food culture, nightlife, nature, and travel style.
 
 To add more cities, create JSON files in `timbuktoo/data/pilot_cities/` and run the loader.
 
@@ -307,6 +332,81 @@ All agents inherit from `BaseAgent` with built-in:
 - Token counting
 - JSON parsing
 - Error handling
+
+## Open-Source Data Integration
+
+### 50+ Data Sources Documented
+
+Timbuktoo is designed to ingest open-source travel data from:
+
+#### Geographic & Places
+- **OpenStreetMap**: POIs, restaurants, bars, landmarks (ODbL license)
+- **GeoNames**: City metadata, coordinates, elevations
+
+#### Weather & Climate
+- **NOAA**: Historical weather, seasonal patterns
+- **Meteostat**: Weather history database
+- **ECMWF**: Climate projections
+
+#### Events & Festivals
+- **Wikidata**: Structured festival data
+- **Municipal Open Data**: City events calendars
+- **Eventbrite**: Public events API
+
+#### Food & Nightlife
+- **Open Food Facts**: Local cuisine ingredients
+- **OSM**: Restaurants, bars, cafes with verified data
+- **Municipal Business Licenses**: Official venue registries
+
+#### Nature & Outdoors
+- **Protected Planet (WDPA)**: National parks, nature reserves
+- **AllTrails**: Hiking trail data
+- **US National Park Service**: Parks and trails API
+
+#### Culture & History
+- **UNESCO**: World Heritage Sites
+- **Europeana**: EU cultural heritage
+- **Smithsonian Open Access**: Museum collections
+
+#### Transportation
+- **GTFS Feeds**: Public transit schedules worldwide
+- **OpenFlights**: Airport and route data
+- **OSM Routing**: Walking and driving routes
+
+#### Cost & Safety
+- **World Bank**: Economic indicators
+- **OECD**: Cost of living indices
+- **CDC/WHO**: Travel health advisories
+
+See [docs/DATA_SOURCES.md](docs/DATA_SOURCES.md) for complete catalog and integration guides.
+
+### Data Ingestion Pipeline
+
+Complete operational checklist available in [docs/DATA_INGESTION.md](docs/DATA_INGESTION.md):
+- Source qualification (license, trust tier, update cadence)
+- Normalization pipeline
+- Enrichment with tags, vibes, price tiers
+- Chunking strategy (300-600 tokens)
+- Vector embedding generation
+- Quality validation
+
+### Vector Schema
+
+Optimized for semantic recall + itinerary reasoning:
+```json
+{
+  "vector_id": "uuid",
+  "city_id": "uuid",
+  "entity_type": "restaurant|bar|museum|nature|event",
+  "title": "Cal Pep",
+  "content": "Legendary tapas bar...",
+  "tags": ["food", "tapas", "seafood"],
+  "vibe": ["authentic", "local"],
+  "price_tier": "mid-high",
+  "seasonality": ["spring", "summer", "fall"],
+  "trust_tier": 4
+}
+```
 
 ## Deployment Checklist
 
