@@ -53,5 +53,16 @@
     "best_seasons": ["spring", "fall"],
     "currency": "JPY",
     "language": "Japanese"
+  },
+  {
+    "name": "New York City",
+    "country": "USA",
+    "timezone": "America/New_York",
+    "latitude": 40.7128,
+    "longitude": -74.0060,
+    "description": "The city that never sleeps - iconic skyline, world-class dining, diverse neighborhoods, cutting-edge culture, and endless energy. From hidden speakeasies to Michelin-starred restaurants.",
+    "best_seasons": ["spring", "fall"],
+    "currency": "USD",
+    "language": "English"
   }
 ]

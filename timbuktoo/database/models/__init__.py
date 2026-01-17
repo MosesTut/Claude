@@ -5,6 +5,7 @@ from .city import City
 from .entity import Entity
 from .trip import Trip, Feedback, CostTracking
 from .security import User, AuditLog
+from .tenant import Tenant, Subscription, UsageQuota, OnboardingSession, TenantUser, PricingPlan
 
 __all__ = [
     "Base",
@@ -18,5 +19,11 @@ __all__ = [
     "Feedback",
     "CostTracking",
     "User",
-    "AuditLog"
+    "AuditLog",
+    "Tenant",
+    "Subscription",
+    "UsageQuota",
+    "OnboardingSession",
+    "TenantUser",
+    "PricingPlan"
 ]
