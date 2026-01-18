@@ -1,0 +1,43 @@
+Issue Type,Issue Key,Summary,Description,Priority,Epic Name,Epic Link,Story Points,Assignee,Labels,Component
+Epic,TRVL-CORE-001,Knowledge Infrastructure,Core vector and relational data layer for city knowledge base and trip management,P0,Knowledge Infrastructure,,,Platform,"vector,rag,database",Backend
+Story,TRVL-101,Create Vector Collection,"Implement city_knowledge_vectors with metadata filters (city_id, entity_type, seasonality, vibes, price_tier). Search latency < 100ms. Batch ingestion 100+ entities/min.",P0,,TRVL-CORE-001,5,ML Engineer,"vector,rag,chromadb",ML
+Story,TRVL-102,Relational Schema,"Create cities, entities, vectors, trips, feedback tables with FK constraints and proper indexing. Migration scripts included.",P0,,TRVL-CORE-001,3,Backend Engineer,"db,sql,postgresql",Backend
+
+Epic,TRVL-INGEST-002,City Ingestion,Automated city ingestion pipeline with normalization and QA,P0,City Ingestion,,,Data Engineering,"data,etl,ingestion",Data
+Story,TRVL-201,City Ingestion Pipeline,"End-to-end pipeline: OSM + Wikidata fetch → normalize → enrich → embed → QA. Complete in <30 min, ≥120 entities/city.",P0,,TRVL-INGEST-002,8,Data Engineer,"data,etl,osm,wikidata",Data
+Task,TRVL-202,Load Pilot Cities,"Ingest 6 pilot cities: Mexico City, Barcelona, Tokyo, Lisbon, NYC, Bangkok. Pass QA checklist for all.",P0,,TRVL-INGEST-002,5,Data Engineer,"pilot,cities,qa",Data
+
+Epic,TRVL-AGENT-003,Agent Orchestration,Multi-agent routing with state management and error handling,P0,Agent Orchestration,,,Backend,"agents,router,orchestration",Backend
+Story,TRVL-301,Agent Router,"Deterministic agent sequencing with WorkflowState, strict JSON validation, graceful failures, retry logic.",P0,,TRVL-AGENT-003,8,Backend Engineer,"agents,router,orchestration",Backend
+Story,TRVL-302,Shared Trip Memory,"Persist immutable trip context accessible to all agents. Append-only history with context snapshots.",P0,,TRVL-AGENT-003,3,Backend Engineer,"state,context,memory",Backend
+
+Epic,TRVL-TOOLS-004,Real-Time Tools,Weather and events API integrations with caching,P1,Real-Time Tools,,,Backend,"tools,integrations,api",Backend
+Story,TRVL-401,Weather Tool Integration,"Integrate OpenWeatherMap API for 7-day forecasts. Cache 60min TTL. Mock fallback. Used in itinerary logic.",P1,,TRVL-TOOLS-004,3,Backend Engineer,"tools,weather,api",Backend
+Story,TRVL-402,Events Tool Integration,"Integrate events API (PredictHQ or municipal data). City/date filtering. Event-based itinerary adjustments.",P1,,TRVL-TOOLS-004,3,Backend Engineer,"tools,events,api",Backend
+
+Epic,TRVL-LEARN-005,Feedback & Learning,Feedback capture and entity re-ranking based on ratings,P1,Feedback & Learning,,,Full Stack + ML,"feedback,learning,ml",Full Stack
+Story,TRVL-501,Feedback API/UI,"POST /api/v1/feedback endpoint. Day-level ratings, overall/pacing/authenticity/value ratings, comments, liked/disliked entities.",P1,,TRVL-LEARN-005,5,Full Stack Engineer,"feedback,ui,api",Full Stack
+Story,TRVL-502,Feedback Weighting Engine,"Weekly entity re-ranking based on feedback. Boost high-rated (>4.5), dampen low-rated (<3.0). Trust decay over time.",P2,,TRVL-LEARN-005,8,ML Engineer,"ml,ranking,feedback",ML
+
+Epic,TRVL-COST-006,Cost Controls & Monitoring,Per-agent cost tracking and Prometheus metrics,P1,Cost Controls,,,DevOps + Backend,"cost,monitoring,metrics",DevOps
+Story,TRVL-601,Cost Tracking Per Agent,"Track token usage and costs per agent call. Store in cost_tracking table. Alert if trip cost >$0.80.",P1,,TRVL-COST-006,3,Backend Engineer,"cost,tracking,database",Backend
+Story,TRVL-602,Prometheus Metrics,"Expose /metrics endpoint. Track: agent latency, cost/trip, feedback ratings, quota utilization. Grafana dashboards.",P1,,TRVL-COST-006,3,DevOps Engineer,"prometheus,monitoring,grafana",DevOps
+
+Epic,TRVL-TENANT-007,Multi-Tenancy,Schema-per-tenant isolation with usage quotas,P0,Multi-Tenancy,,,Backend,"multi-tenant,saas,isolation",Backend
+Story,TRVL-701,Tenant Isolation,"Schema-per-tenant in PostgreSQL. Vector namespace per tenant in ChromaDB. Row-level security.",P0,,TRVL-TENANT-007,8,Backend Engineer,"multi-tenant,isolation,rbac",Backend
+Story,TRVL-702,Usage Quotas,"Enforce itineraries/month quotas per tier. Starter: 10, Pro: unlimited, Enterprise: unlimited + custom.",P0,,TRVL-TENANT-007,5,Backend Engineer,"quotas,limits,billing",Backend
+Story,TRVL-703,Customer Onboarding Flow,"7-step onboarding: signup → preferences → city recommendation → itinerary → feedback. FastAPI endpoints.",P0,,TRVL-TENANT-007,8,Full Stack Engineer,"onboarding,api,flow",Full Stack
+
+Epic,TRVL-SEC-008,Security & Compliance,RBAC, audit logging, encryption for SOC-2 compliance,P1,Security & Compliance,,,Security + Backend,"security,compliance,soc2",Security
+Story,TRVL-801,RBAC Implementation,"Three roles: admin, operator, viewer. JWT authentication. Permission enforcement on all endpoints.",P1,,TRVL-SEC-008,5,Backend Engineer,"rbac,auth,jwt",Backend
+Story,TRVL-802,Audit Logging,"Comprehensive audit logs: authentication, data access, trip creation, config changes. 1-year retention.",P1,,TRVL-SEC-008,3,Backend Engineer,"audit,logging,compliance",Backend
+Story,TRVL-803,Data Encryption,"Fernet encryption at rest. TLS in transit. Encrypted backups. No PII in vectors.",P1,,TRVL-SEC-008,3,Security Engineer,"encryption,security,pii",Security
+
+Epic,TRVL-DEPLOY-009,Deployment & DevOps,Docker containerization and CI/CD pipeline,P1,Deployment,,,DevOps,"deployment,docker,cicd",DevOps
+Story,TRVL-901,Docker Containerization,"Dockerfile for API server. docker-compose.yml with API + Postgres + ChromaDB. Health checks.",P1,,TRVL-DEPLOY-009,3,DevOps Engineer,"docker,containers,compose",DevOps
+Story,TRVL-902,CI/CD Pipeline,"GitHub Actions: automated testing, linting, code coverage >80%, staging deployment, production approval.",P1,,TRVL-DEPLOY-009,5,DevOps Engineer,"cicd,github-actions,automation",DevOps
+
+Epic,TRVL-ABTEST-010,A/B Testing,Pacing experiment infrastructure and variant assignment,P1,A/B Testing,,,ML + Backend,"ab-testing,experiments,analytics",ML
+Story,TRVL-1001,Variant Assignment System,"Deterministic MD5-based assignment. 50/50 split between control and slow_hidden_gems. Stratify by city.",P1,,TRVL-ABTEST-010,3,Backend Engineer,"ab-testing,variant,randomization",Backend
+Story,TRVL-1002,Experiment Analytics,"Variant performance comparison: overall rating, pacing complaints, completion rate. Statistical significance testing.",P1,,TRVL-ABTEST-010,5,ML Engineer,"analytics,statistics,ab-testing",ML
+Story,TRVL-1003,Experiment Dashboard,"Real-time monitoring: sample sizes, metrics by variant, confidence levels, winner determination.",P2,,TRVL-ABTEST-010,5,Full Stack Engineer,"dashboard,visualization,monitoring",Full Stack
