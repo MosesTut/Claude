@@ -1,0 +1,1480 @@
+# Wrk.Flo Approval Gates - Agent-Specific (Comprehensive)
+## Timbuktoo Travel Concierge
+
+# Purpose: Agent-safe approval gates preventing hallucination, budget overruns, and compliance drift
+# Version: 2.0 (Comprehensive)
+# Last Updated: 2024-06-15
+
+approval_gates:
+
+  # ═══════════════════════════════════════════════════════════════════════════════
+  # GATE 1: CITY INGESTION (Data Quality & Attribution)
+  # ═══════════════════════════════════════════════════════════════════════════════
+
+  - id: city_ingestion
+    name: "City Ingestion Approval Gate"
+    description: "Ensures city data quality, source attribution, and prevents hallucinated entities"
+    trigger: workflow_start
+    workflow: city_data_ingestion
+    position: after_data_fetch_before_vectorization
+    type: manual_with_automated_checks
+    criticality: high
+    prevents:
+      - Hallucinated city data (non-existent restaurants, bars, landmarks)
+      - Missing source attribution (untraceable recommendations)
+      - Low-quality data (trust tier <4)
+      - Duplicate entities
+      - Incomplete entity metadata
+
+    # Required Approvers
+    required_approvers:
+      - role: data_quality_lead
+        email: data.quality.lead@timbuktoo.ai
+        required: true
+        approval_weight: 1.0
+        sla_hours: 24
+        escalation_policy:
+          - after_hours: 12
+            escalate_to: vp.engineering@timbuktoo.ai
+          - after_hours: 24
+            escalate_to: ceo@timbuktoo.ai
+
+      - role: ml_engineer
+        email: ml.engineer@timbuktoo.ai
+        required: false  # Optional second approval for high-risk cities
+        approval_weight: 0.5
+        conditions:
+          - city_entity_count > 200
+          - city_risk_level: high
+
+    # Automated Pre-Flight Checks (Must Pass Before Manual Review)
+    automated_checks:
+
+      # Check 1: Vector Schema Validation
+      - check: vector_schema_validation
+        description: "Validate all entities have required vector metadata fields"
+        implementation: python_function
+        function: validate_vector_schema
+        parameters:
+          required_fields:
+            - entity_id
+            - entity_type
+            - name
+            - description
+            - city_id
+            - latitude
+            - longitude
+            - price_tier
+            - vibes
+            - trust_tier
+            - source
+            - source_url
+            - last_updated
+        failure_action:
+          type: block_ingestion
+          error_message: |
+            ⛔ **Vector Schema Validation Failed**
+
+            All entities must include required metadata fields.
+
+            **Missing Fields**: {{missing_fields}}
+            **Affected Entities**: {{affected_entity_count}}
+
+            **Required Fields**:
+            - entity_id, entity_type, name, description
+            - city_id, latitude, longitude
+            - price_tier, vibes, trust_tier
+            - source, source_url, last_updated
+
+            Fix schema and re-submit for ingestion.
+          notify: data.quality.lead@timbuktoo.ai
+          log_to: SOC2/04_Logging_and_Monitoring/Data_Quality_Failures.log
+
+      # Check 2: Source Attribution Present
+      - check: source_attribution_present
+        description: "Verify every entity has valid source and source_url"
+        implementation: python_function
+        function: validate_source_attribution
+        parameters:
+          allowed_sources:
+            - OpenStreetMap
+            - Wikidata
+            - TripAdvisor (verified)
+            - Google Places (verified)
+            - Local Guide 2024
+            - Municipal Open Data
+          source_url_pattern: "^https?://.*"
+          require_both: true  # Both source and source_url required
+        failure_action:
+          type: block_ingestion
+          error_message: |
+            ⛔ **Source Attribution Missing**
+
+            All entities MUST have traceable sources to prevent hallucination.
+
+            **Entities Missing Attribution**: {{missing_attribution_count}}
+            **Examples**:
+            {{#each missing_attribution_entities}}
+            - {{this.name}} ({{this.entity_type}}) - Missing: {{this.missing_field}}
+            {{/each}}
+
+            **Allowed Sources**:
+            - OpenStreetMap, Wikidata, TripAdvisor (verified)
+            - Google Places (verified), Local Guide 2024, Municipal Open Data
+
+            Add source attribution before re-submitting.
+          notify: data.quality.lead@timbuktoo.ai
+
+      # Check 3: Trust Tier Distribution
+      - check: trust_tier_distribution
+        description: "Ensure ≥70% of entities have trust tier 4-5 (high quality)"
+        implementation: python_function
+        function: calculate_trust_tier_distribution
+        parameters:
+          min_tier_4_or_5_percent: 70
+          min_total_entities: 50
+        failure_action:
+          type: require_manual_review
+          warning_message: |
+            ⚠️ **Low Trust Tier Distribution**
+
+            Only {{tier_4_5_percent}}% of entities have trust tier 4-5 (target: ≥70%).
+
+            **Distribution**:
+            - Tier 5 (Government data): {{tier_5_count}} ({{tier_5_percent}}%)
+            - Tier 4 (Verified OSM): {{tier_4_count}} ({{tier_4_percent}}%)
+            - Tier 3 (Community): {{tier_3_count}} ({{tier_3_percent}}%)
+            - Tier 2 (Crowd-sourced): {{tier_2_count}} ({{tier_2_percent}}%)
+            - Tier 1 (Experimental): {{tier_1_count}} ({{tier_1_percent}}%)
+
+            **Recommendation**: Add more high-quality sources (OSM, Wikidata, municipal data).
+
+            Manual review required before approval.
+          require_reviewer_acknowledgment: true
+
+      # Check 4: Duplicate Detection
+      - check: duplicate_entity_detection
+        description: "Detect duplicate entities (same name + location within 50m)"
+        implementation: python_function
+        function: detect_duplicate_entities
+        parameters:
+          match_threshold:
+            name_similarity: 0.85  # Levenshtein distance
+            location_distance_meters: 50
+          deduplication_strategy: keep_highest_trust_tier
+        failure_action:
+          type: auto_deduplicate_with_notification
+          action: remove_duplicates
+          keep_criteria: highest_trust_tier_then_newest
+          notification_message: |
+            🔄 **Duplicate Entities Detected and Removed**
+
+            **Duplicates Found**: {{duplicate_count}}
+            **Kept**: Highest trust tier, then newest
+            **Removed**: {{removed_entity_ids}}
+
+            **Examples**:
+            {{#each duplicates}}
+            - {{this.name}}: Kept {{this.kept_entity.source}} (tier {{this.kept_entity.trust_tier}}), removed {{this.removed_count}} duplicates
+            {{/each}}
+
+            Review deduplication log: `logs/city_ingestion/deduplication_{{city_id}}.json`
+          log_to: logs/city_ingestion/deduplication_{{city_id}}.json
+
+      # Check 5: Geocoding Validation
+      - check: geocoding_validation
+        description: "Verify all lat/lon coordinates are within city boundaries"
+        implementation: python_function
+        function: validate_geocoding
+        parameters:
+          city_boundary_geojson: "{{city_metadata.boundary_geojson}}"
+          tolerance_meters: 5000  # Allow 5km tolerance for suburbs
+        failure_action:
+          type: flag_for_review
+          warning_message: |
+            ⚠️ **Geocoding Issues Detected**
+
+            {{out_of_bounds_count}} entities have coordinates outside city boundaries.
+
+            **Out-of-Bounds Entities**:
+            {{#each out_of_bounds_entities}}
+            - {{this.name}} ({{this.latitude}}, {{this.longitude}}) - {{this.distance_from_city_km}}km from city center
+            {{/each}}
+
+            **Options**:
+            1. Accept (if legitimate suburbs/nearby destinations)
+            2. Re-geocode with correct coordinates
+            3. Remove invalid entities
+
+            Manual review required.
+
+      # Check 6: Entity Type Distribution
+      - check: entity_type_distribution
+        description: "Ensure balanced distribution of entity types (food, drink, nature, culture)"
+        implementation: python_function
+        function: calculate_entity_type_distribution
+        parameters:
+          min_per_type:
+            restaurant: 15
+            bar: 10
+            cafe: 10
+            nature_spot: 8
+            cultural_site: 8
+            nightlife: 5
+          warn_if_below_min: true
+        failure_action:
+          type: warn_with_recommendation
+          warning_message: |
+            ℹ️ **Entity Type Distribution**
+
+            **Current Distribution**:
+            - Restaurants: {{restaurant_count}} (min: 15)
+            - Bars: {{bar_count}} (min: 10)
+            - Cafes: {{cafe_count}} (min: 10)
+            - Nature Spots: {{nature_spot_count}} (min: 8)
+            - Cultural Sites: {{cultural_site_count}} (min: 8)
+            - Nightlife: {{nightlife_count}} (min: 5)
+
+            **Recommendations**:
+            {{#each recommendations}}
+            - Add {{this.count_needed}} more {{this.entity_type}} entities
+            {{/each}}
+
+            **Action**: Approve to proceed, or reject to add more entities.
+
+      # Check 7: Description Quality
+      - check: description_quality
+        description: "Validate entity descriptions are substantive (≥50 chars, specific details)"
+        implementation: python_function
+        function: validate_description_quality
+        parameters:
+          min_length: 50
+          max_length: 600
+          reject_generic_phrases:
+            - "Great place"
+            - "Nice atmosphere"
+            - "Highly recommended"
+            - "Popular spot"
+          require_specific_details: true  # Must mention food/drink items, prices, hours, etc.
+        failure_action:
+          type: flag_low_quality_descriptions
+          warning_message: |
+            ⚠️ **Low-Quality Descriptions Detected**
+
+            {{low_quality_count}} entities have generic or insufficient descriptions.
+
+            **Examples**:
+            {{#each low_quality_descriptions}}
+            - {{this.name}}: "{{this.description}}" ({{this.description.length}} chars, issue: {{this.issue}})
+            {{/each}}
+
+            **Guidelines**:
+            - Minimum 50 characters, maximum 600
+            - Include specific details: menu items, prices, hours, what to order
+            - Avoid generic phrases: "great place", "nice atmosphere"
+
+            **Action**: Approve to proceed with warnings, or reject to improve descriptions.
+
+      # Check 8: Price Tier Validation
+      - check: price_tier_validation
+        description: "Ensure price_tier is set and valid (budget, mid, high)"
+        implementation: python_function
+        function: validate_price_tiers
+        parameters:
+          allowed_values: [budget, mid, high]
+          require_for_entity_types: [restaurant, bar, cafe, nightlife]
+          distribution_target:
+            budget: 0.30  # 30% budget
+            mid: 0.50     # 50% mid
+            high: 0.20    # 20% high
+          warn_if_skewed: true
+        failure_action:
+          type: warn_if_distribution_skewed
+          warning_message: |
+            ℹ️ **Price Tier Distribution**
+
+            **Current**:
+            - Budget: {{budget_percent}}% (target: 30%)
+            - Mid: {{mid_percent}}% (target: 50%)
+            - High: {{high_percent}}% (target: 20%)
+
+            **Recommendation**: Add more {{underrepresented_tier}} options to balance distribution.
+
+            Proceed or reject to rebalance.
+
+      # Check 9: Vibes Tags Validation
+      - check: vibes_tags_validation
+        description: "Validate vibes tags are from allowed list and entities have 1-5 tags"
+        implementation: python_function
+        function: validate_vibes_tags
+        parameters:
+          allowed_vibes:
+            - local
+            - authentic
+            - hidden_gem
+            - touristy
+            - food
+            - drink
+            - nightlife
+            - nature
+            - culture
+            - art
+            - music
+            - family_friendly
+            - romantic
+            - adventure
+            - relaxation
+          min_tags_per_entity: 1
+          max_tags_per_entity: 5
+        failure_action:
+          type: block_invalid_vibes
+          error_message: |
+            ⛔ **Invalid Vibes Tags Detected**
+
+            **Issues**:
+            {{#each invalid_vibes_entities}}
+            - {{this.name}}: Invalid tags {{this.invalid_tags}}, count {{this.tag_count}} (must be 1-5)
+            {{/each}}
+
+            **Allowed Vibes**:
+            local, authentic, hidden_gem, touristy, food, drink, nightlife,
+            nature, culture, art, music, family_friendly, romantic, adventure, relaxation
+
+            Fix tags and re-submit.
+
+      # Check 10: Freshness Check
+      - check: data_freshness
+        description: "Ensure data is not stale (last_updated within 180 days)"
+        implementation: python_function
+        function: validate_data_freshness
+        parameters:
+          max_age_days: 180
+          warn_if_older_than_days: 90
+        failure_action:
+          type: warn_stale_data
+          warning_message: |
+            ⚠️ **Stale Data Detected**
+
+            {{stale_entity_count}} entities have not been updated in >90 days.
+
+            **Oldest Entities**:
+            {{#each stale_entities}}
+            - {{this.name}}: Last updated {{this.last_updated}} ({{this.days_old}} days ago)
+            {{/each}}
+
+            **Recommendation**: Re-fetch data from sources or verify accuracy.
+
+            Approve to proceed with stale data, or reject to refresh.
+
+    # Manual Review Workflow
+    manual_review:
+      enabled: true
+      review_ui_url: "https://wrkflo.timbuktoo.ai/city-ingestion/review/{{city_id}}"
+      review_checklist:
+        - item: "All automated checks passed or acknowledged"
+          required: true
+        - item: "Entity descriptions are specific and actionable"
+          required: true
+        - item: "Source attribution is traceable (URLs verified)"
+          required: true
+        - item: "Trust tier distribution is acceptable (≥70% tier 4-5)"
+          required: true
+        - item: "No obvious hallucinated entities (cross-check with Google Maps)"
+          required: true
+        - item: "Price tiers are reasonable for city cost-of-living"
+          required: false
+        - item: "Vibes tags align with entity descriptions"
+          required: false
+
+      approval_form:
+        fields:
+          - field: reviewer_decision
+            type: select
+            options: [approve, reject, request_changes]
+            required: true
+
+          - field: approval_notes
+            type: textarea
+            placeholder: "Reviewer notes (why approved/rejected, specific issues found, etc.)"
+            required: true
+            min_length: 50
+
+          - field: data_quality_score
+            type: number
+            min: 1
+            max: 10
+            required: true
+            description: "Overall data quality score (1=poor, 10=excellent)"
+
+          - field: trust_override
+            type: checkbox
+            label: "Override low trust tier distribution (use with caution)"
+            required: false
+            requires_justification: true
+
+      approval_outcomes:
+        approve:
+          action: proceed_to_vectorization
+          notify: data.engineering.team@timbuktoo.ai
+          log_to: SOC2/02_Data_Ingestion/Approval_Logs/city_{{city_id}}_approved.json
+          slack_channel: "#data-ingestion"
+          message: |
+            ✅ **City Ingestion Approved**
+
+            **City**: {{city_name}} ({{city_id}})
+            **Reviewer**: {{approver_email}}
+            **Data Quality Score**: {{data_quality_score}}/10
+            **Entities**: {{entity_count}} (Tier 4-5: {{tier_4_5_percent}}%)
+
+            **Notes**: {{approval_notes}}
+
+            Proceeding to vectorization and deployment.
+
+        reject:
+          action: block_ingestion
+          notify: data.source.team@timbuktoo.ai
+          log_to: SOC2/02_Data_Ingestion/Rejection_Logs/city_{{city_id}}_rejected.json
+          slack_channel: "#data-ingestion"
+          message: |
+            ⛔ **City Ingestion Rejected**
+
+            **City**: {{city_name}} ({{city_id}})
+            **Reviewer**: {{approver_email}}
+            **Reason**: {{approval_notes}}
+
+            **Action Required**: Fix issues and re-submit for approval.
+
+        request_changes:
+          action: pause_ingestion
+          notify: data.source.team@timbuktoo.ai
+          create_jira_ticket:
+            summary: "Data Quality Issues: {{city_name}} Ingestion"
+            description: "{{approval_notes}}"
+            assignee: data.source.team@timbuktoo.ai
+          slack_channel: "#data-ingestion"
+          message: |
+            ⚠️ **Changes Requested: {{city_name}}**
+
+            **Reviewer**: {{approver_email}}
+            **Issues**: {{approval_notes}}
+
+            **Jira Ticket**: {{jira_ticket_key}}
+
+            Address issues and re-submit.
+
+    # Post-Approval Actions
+    post_approval_actions:
+      - action: update_evidence_map
+        api_endpoint: "https://api.timbuktoo.ai/internal/evidence-map/city-ingestion"
+        payload:
+          city_id: "{{city_id}}"
+          city_name: "{{city_name}}"
+          entity_count: "{{entity_count}}"
+          trust_tier_distribution: "{{trust_tier_distribution}}"
+          data_quality_score: "{{data_quality_score}}"
+          approved_by: "{{approver_email}}"
+          approved_at: "{{approval_timestamp}}"
+          evidence_location: "SOC2/02_Data_Ingestion/Approval_Logs/"
+
+      - action: log_audit_event
+        event_type: city_data_ingestion_approved
+        log_destination: SOC2/04_Logging_and_Monitoring/Audit_Logs/
+        fields:
+          city_id: "{{city_id}}"
+          approver: "{{approver_email}}"
+          automated_checks_passed: "{{automated_checks_passed_count}}/{{automated_checks_total_count}}"
+          manual_review_decision: "{{reviewer_decision}}"
+
+    # Timeout and Escalation
+    timeout:
+      manual_review_timeout_hours: 24
+      on_timeout:
+        action: escalate
+        escalate_to: vp.engineering@timbuktoo.ai
+        message: "City ingestion approval for {{city_name}} has been pending for 24 hours. Please review urgently."
+
+    # Monitoring Metrics
+    metrics:
+      - metric: city_ingestion_approval_rate
+        calculation: approved / (approved + rejected)
+        target: "> 0.80"
+
+      - metric: average_data_quality_score
+        calculation: avg(data_quality_score)
+        target: ">= 7.5"
+
+      - metric: time_to_approval_hours
+        calculation: approval_timestamp - submission_timestamp
+        target: "< 12 hours"
+
+
+  # ═══════════════════════════════════════════════════════════════════════════════
+  # GATE 2: ITINERARY GENERATION (Budget & Safety Rules)
+  # ═══════════════════════════════════════════════════════════════════════════════
+
+  - id: itinerary_generation
+    name: "Itinerary Generation Approval Gate"
+    description: "Ensures budget constraints, safety rules, and variant compliance for AI-generated itineraries"
+    trigger: node_complete
+    node: concierge
+    position: after_concierge_before_postprocessor
+    type: automated_with_sampling
+    criticality: high
+    prevents:
+      - Budget overruns (>$0.80/trip hard cap)
+      - Unsafe recommendations (dangerous areas, scams)
+      - Variant drift (Control/Slow Hidden Gems not followed)
+      - Hallucinated venues (recommendations not in vector DB)
+      - Invalid itinerary structure (missing days, invalid JSON)
+
+    # Required Approvers (Manual Review for Sample)
+    required_approvers:
+      - role: concierge_lead
+        email: concierge.lead@timbuktoo.ai
+        required: true
+        sample_rate: 0.05  # Review 5% of itineraries
+        sampling_criteria:
+          - cost_usd > 0.60  # Sample high-cost trips
+          - daily_activities_count > 4  # Sample overpacked days
+          - user_feedback_score < 4.0  # Sample low-rated trips (if repeat user)
+        sla_hours: 2
+        escalation_policy:
+          - after_hours: 1
+            escalate_to: product.manager@timbuktoo.ai
+
+    # Automated Pre-Flight Checks (All Must Pass)
+    automated_checks:
+
+      # Check 1: Budget Constraints Passed
+      - check: budget_constraints_passed
+        description: "Verify trip cost is under $0.80 hard cap"
+        implementation: python_function
+        function: validate_trip_budget
+        parameters:
+          hard_cap_usd: 0.80
+          warn_threshold_usd: 0.60
+          cost_breakdown_required: true
+        failure_action:
+          type: block_itinerary
+          error_message: |
+            ⛔ **Budget Hard Cap Exceeded**
+
+            Trip cost of ${{trip_cost_usd}} exceeds $0.80 hard cap.
+
+            **Cost Breakdown**:
+            - Intent Parser: ${{intent_parser_cost}}
+            - City Selection: ${{city_selection_cost}}
+            - Local Expert: ${{local_expert_cost}}
+            - Weather/Events Tools: ${{tools_cost}}
+            - Travel Concierge: ${{concierge_cost}}
+            **Total**: ${{trip_cost_usd}}
+
+            **Degradation Applied**: {{degradation_strategy}}
+
+            **Action**: This should not happen if degradation is working correctly. Investigate cost controller.
+          notify: engineering.lead@timbuktoo.ai
+          severity: critical
+
+      # Check 2: Safety Rules Enforced
+      - check: safety_rules_enforced
+        description: "Ensure no dangerous areas, scams, or unsafe recommendations"
+        implementation: python_function
+        function: validate_safety_rules
+        parameters:
+          blacklisted_locations:
+            - pattern: ".*red light district.*"
+              reason: "Safety concern"
+            - pattern: ".*known scam.*"
+              reason: "User protection"
+          require_safety_metadata: true
+          check_time_of_day_safety: true  # Flag late-night activities in unsafe areas
+        failure_action:
+          type: block_and_regenerate
+          error_message: |
+            ⛔ **Safety Rule Violation Detected**
+
+            Unsafe recommendations found in itinerary.
+
+            **Violations**:
+            {{#each safety_violations}}
+            - Day {{this.day}}, {{this.time}}: {{this.activity}} at {{this.location}} (Reason: {{this.reason}})
+            {{/each}}
+
+            **Action**: Removing unsafe activities and regenerating itinerary.
+          auto_remediate: true
+          remediation_action: remove_unsafe_activities_and_regenerate
+
+      # Check 3: Variant Compliance (Control vs Slow Hidden Gems)
+      - check: variant_compliance
+        description: "Ensure itinerary follows variant-specific pacing rules"
+        implementation: python_function
+        function: validate_variant_compliance
+        parameters:
+          variants:
+            control:
+              min_activities_per_day: 2
+              max_activities_per_day: 3
+              local_spots_percent_min: 60
+              must_sees_percent_max: 40
+            slow_hidden_gems:
+              min_activities_per_day: 1
+              max_activities_per_day: 2
+              local_spots_percent_min: 90
+              must_sees_percent_max: 10
+          tolerance: 0.1  # Allow 10% variance
+        failure_action:
+          type: flag_for_review
+          warning_message: |
+            ⚠️ **Variant Compliance Warning**
+
+            Itinerary does not strictly follow {{variant}} variant guidelines.
+
+            **Variant**: {{variant}}
+            **Expected Activities/Day**: {{expected_activities_range}}
+            **Actual Activities/Day**: {{actual_activities_per_day}}
+
+            **Expected Local/Must-See Ratio**: {{expected_local_percent}}% / {{expected_must_see_percent}}%
+            **Actual Ratio**: {{actual_local_percent}}% / {{actual_must_see_percent}}%
+
+            **Action**: Approve if acceptable variance, or reject to regenerate with stricter adherence.
+          require_manual_review: true
+          sample_rate: 0.20  # Review 20% of non-compliant itineraries
+
+      # Check 4: Hallucination Detection (Venue Verification)
+      - check: hallucination_detection
+        description: "Verify all recommended venues exist in vector database"
+        implementation: python_function
+        function: detect_hallucinated_venues
+        parameters:
+          cross_check_with_vector_db: true
+          allow_fuzzy_matching: true
+          fuzzy_match_threshold: 0.90  # 90% similarity
+          strict_mode: true  # Block any unverified venues
+        failure_action:
+          type: block_itinerary
+          error_message: |
+            ⛔ **Hallucinated Venues Detected**
+
+            AI agent recommended venues not found in vector database (potential hallucination).
+
+            **Unverified Venues**:
+            {{#each hallucinated_venues}}
+            - Day {{this.day}}, {{this.time}}: "{{this.venue_name}}" ({{this.entity_type}}) - No match in DB
+            {{/each}}
+
+            **Action**: This is a critical failure. Block itinerary and alert ML team.
+          notify: ml.team@timbuktoo.ai
+          severity: critical
+          create_incident: true
+
+      # Check 5: Invalid Itinerary Structure
+      - check: itinerary_structure_validation
+        description: "Validate JSON structure, 7 days present, required fields populated"
+        implementation: python_function
+        function: validate_itinerary_structure
+        parameters:
+          required_days: 7
+          required_fields_per_day:
+            - day
+            - date
+            - theme
+            - weather
+            - schedule
+            - meals
+            - daily_budget_usd
+          required_fields_per_activity:
+            - time
+            - duration_minutes
+            - activity
+            - type
+            - location
+            - details
+            - cost_usd
+          required_top_level_fields:
+            - trip_summary
+            - daily_itineraries
+            - logistics
+            - packing_list
+        failure_action:
+          type: retry_generation
+          error_message: |
+            ⛔ **Invalid Itinerary Structure**
+
+            Generated itinerary is missing required fields or has invalid structure.
+
+            **Issues**:
+            {{#each structure_issues}}
+            - {{this.field}}: {{this.issue}}
+            {{/each}}
+
+            **Action**: Retrying itinerary generation (attempt {{retry_count}}/3).
+          max_retries: 3
+          on_max_retries_exceeded:
+            action: fail_trip
+            message: "Itinerary generation failed after 3 attempts. Refund user."
+
+      # Check 6: Daily Budget Realism
+      - check: daily_budget_realism
+        description: "Ensure daily budgets are realistic and match city cost-of-living"
+        implementation: python_function
+        function: validate_daily_budgets
+        parameters:
+          max_daily_budget_usd: 500
+          city_cost_multipliers:
+            Tokyo: 1.3
+            New_York_City: 1.2
+            Lisbon: 0.8
+            Mexico_City: 0.7
+            Barcelona: 1.0
+            Bangkok: 0.6
+          warn_if_exceeds_multiplier: 1.5
+        failure_action:
+          type: warn_unrealistic_budget
+          warning_message: |
+            ⚠️ **Unrealistic Daily Budget**
+
+            Daily budgets exceed expected range for {{city_name}}.
+
+            **Daily Budgets**:
+            {{#each daily_budgets}}
+            - Day {{this.day}}: ${{this.budget_usd}} (expected: ${{this.expected_range}})
+            {{/each}}
+
+            **City Cost Multiplier**: {{city_cost_multiplier}}
+            **Recommendation**: Review activity costs and adjust if inflated.
+
+            Approve to proceed, or reject to regenerate with realistic pricing.
+          require_manual_review_if_exceeds: 200
+
+      # Check 7: Packing List Present
+      - check: packing_list_present
+        description: "Verify packing list is included and relevant to trip"
+        implementation: python_function
+        function: validate_packing_list
+        parameters:
+          required: true
+          min_items: 5
+          context_relevant: true  # Must match city climate and activities
+        failure_action:
+          type: warn_missing_packing_list
+          warning_message: "Packing list missing or incomplete. Proceeding with warning."
+          proceed: true
+
+      # Check 8: Activity Time Conflicts
+      - check: activity_time_conflicts
+        description: "Detect overlapping activities or unrealistic travel times"
+        implementation: python_function
+        function: detect_time_conflicts
+        parameters:
+          check_overlaps: true
+          check_travel_time_feasibility: true
+          max_walking_distance_per_transition_km: 3
+          buffer_between_activities_minutes: 30
+        failure_action:
+          type: auto_fix_conflicts
+          action: adjust_activity_times
+          warning_message: |
+            ⚠️ **Time Conflicts Detected and Auto-Fixed**
+
+            **Issues Fixed**:
+            {{#each time_conflicts}}
+            - Day {{this.day}}: {{this.conflict_type}} between {{this.activity_1}} and {{this.activity_2}}
+              Resolution: {{this.resolution}}
+            {{/each}}
+
+            Review adjusted schedule in final itinerary.
+          notify: concierge.lead@timbuktoo.ai
+
+      # Check 9: Meal Recommendations Present
+      - check: meal_recommendations_present
+        description: "Ensure breakfast, lunch, dinner recommendations for each day"
+        implementation: python_function
+        function: validate_meal_recommendations
+        parameters:
+          required_meals_per_day: [breakfast, lunch, dinner]
+          allow_flexible_brunch: true
+          require_specific_venue: true
+        failure_action:
+          type: warn_missing_meals
+          warning_message: |
+            ⚠️ **Missing Meal Recommendations**
+
+            {{missing_meal_count}} meals missing across {{missing_meal_days}} days.
+
+            **Details**:
+            {{#each missing_meals}}
+            - Day {{this.day}}: Missing {{this.meal_type}}
+            {{/each}}
+
+            Proceeding with warning.
+          proceed: true
+
+      # Check 10: Insider Tips Quality
+      - check: insider_tips_quality
+        description: "Validate insider tips are specific and actionable"
+        implementation: python_function
+        function: validate_insider_tips
+        parameters:
+          min_tips_per_day: 2
+          min_tip_length: 20
+          reject_generic_tips:
+            - "Arrive early"
+            - "Book in advance"
+            - "Ask locals"
+        failure_action:
+          type: warn_low_quality_tips
+          warning_message: "Insider tips are generic or insufficient. Proceeding with warning."
+          proceed: true
+
+    # Manual Review Workflow (Sampled Itineraries)
+    manual_review:
+      enabled: true
+      sample_rate: 0.05  # 5% of all itineraries
+      review_ui_url: "https://wrkflo.timbuktoo.ai/itinerary-review/{{trip_id}}"
+      review_checklist:
+        - item: "All automated checks passed"
+          required: true
+        - item: "Itinerary flows logically (activities well-sequenced)"
+          required: true
+        - item: "Recommendations are specific and actionable"
+          required: true
+        - item: "Budget is realistic for city and user tier"
+          required: true
+        - item: "Variant pacing feels appropriate (Control: balanced, Slow: relaxed)"
+          required: true
+        - item: "No obvious hallucinations or errors"
+          required: true
+
+      approval_form:
+        fields:
+          - field: reviewer_decision
+            type: select
+            options: [approve, reject, request_regeneration]
+            required: true
+
+          - field: quality_score
+            type: number
+            min: 1
+            max: 10
+            required: true
+            description: "Overall itinerary quality (1=poor, 10=excellent)"
+
+          - field: reviewer_notes
+            type: textarea
+            required: true
+            min_length: 30
+
+      approval_outcomes:
+        approve:
+          action: proceed_to_user
+          log_to: SOC2/04_Logging_and_Monitoring/Itinerary_Reviews/approved_{{trip_id}}.json
+
+        reject:
+          action: fail_trip_and_refund
+          log_to: SOC2/04_Logging_and_Monitoring/Itinerary_Reviews/rejected_{{trip_id}}.json
+
+        request_regeneration:
+          action: regenerate_itinerary
+          log_to: SOC2/04_Logging_and_Monitoring/Itinerary_Reviews/regenerated_{{trip_id}}.json
+
+    # Post-Approval Actions
+    post_approval_actions:
+      - action: log_audit_event
+        event_type: itinerary_generated
+        fields:
+          trip_id: "{{trip_id}}"
+          city: "{{city_name}}"
+          variant: "{{variant}}"
+          cost_usd: "{{trip_cost_usd}}"
+          automated_checks_passed: "{{automated_checks_passed_count}}/{{automated_checks_total_count}}"
+          manual_review: "{{manual_review_decision}}"
+
+      - action: increment_tenant_quota
+        tenant_id: "{{tenant_id}}"
+        resource: itineraries
+        amount: 1
+
+    # Timeout
+    timeout:
+      manual_review_timeout_hours: 2
+      on_timeout:
+        action: auto_approve
+        log_warning: "Itinerary review timeout. Auto-approving."
+
+    # Monitoring Metrics
+    metrics:
+      - metric: itinerary_approval_rate
+        calculation: approved / (approved + rejected)
+        target: "> 0.95"
+
+      - metric: budget_compliance_rate
+        calculation: trips_under_cap / total_trips
+        target: "= 1.0"  # 100% compliance
+
+      - metric: hallucination_detection_rate
+        calculation: hallucinations_detected / total_trips
+        target: "< 0.01"  # <1%
+
+
+  # ═══════════════════════════════════════════════════════════════════════════════
+  # GATE 3: PRODUCTION DEPLOY (SOC-2 Controls & Cost Anomaly Scan)
+  # ═══════════════════════════════════════════════════════════════════════════════
+
+  - id: production_deploy
+    name: "Production Deployment Approval Gate"
+    description: "Comprehensive pre-production checks for code changes, SOC-2 compliance, and cost anomaly prevention"
+    trigger: deployment_requested
+    environment: production
+    position: before_deployment
+    type: manual_with_automated_checks
+    criticality: critical
+    prevents:
+      - Unapproved agent logic changes (no security review)
+      - SOC-2 compliance drift (controls not documented)
+      - Cost anomalies (token usage spikes, budget breaches)
+      - Breaking changes (API compatibility issues)
+      - Insufficient testing (test coverage <80%)
+
+    # Required Approvers (All Must Approve)
+    required_approvers:
+      - role: security_lead
+        email: security.lead@timbuktoo.ai
+        required: true
+        approval_weight: 1.0
+        sla_hours: 4
+        conditions:
+          - code_changes_include: "timbuktoo/security/**"
+          - code_changes_include: "timbuktoo/agents/**"
+
+      - role: platform_owner
+        email: platform.owner@timbuktoo.ai
+        required: true
+        approval_weight: 1.0
+        sla_hours: 4
+
+      - role: vp_engineering
+        email: vp.engineering@timbuktoo.ai
+        required: true
+        approval_weight: 1.0
+        sla_hours: 8
+        conditions:
+          - deployment_risk_level: high
+          - breaking_changes_detected: true
+
+    # Automated Pre-Flight Checks
+    automated_checks:
+
+      # Check 1: SOC-2 Controls Attached
+      - check: soc2_controls_attached
+        description: "Verify all code changes map to SOC-2 controls (if compliance-relevant)"
+        implementation: python_function
+        function: validate_soc2_controls
+        parameters:
+          require_for_paths:
+            - "timbuktoo/security/**"
+            - "timbuktoo/database/**"
+            - "timbuktoo/utils/cost_tracker.py"
+            - "timbuktoo/utils/monitoring.py"
+          control_mapping_file: "SOC2/09_Evidence_Index/Control_Code_Mapping.json"
+          auto_detect_from_commit_message: true
+        failure_action:
+          type: block_deployment
+          error_message: |
+            ⛔ **SOC-2 Controls Not Documented**
+
+            Code changes affect compliance-relevant paths but no SOC-2 control mapping found.
+
+            **Files Changed**:
+            {{#each compliance_relevant_files}}
+            - {{this.file}} (affects control: {{this.suggested_control_id}})
+            {{/each}}
+
+            **Action Required**:
+            1. Map changes to SOC-2 controls in `SOC2/09_Evidence_Index/Control_Code_Mapping.json`
+            2. Or add to commit message: `[SOC-2: CC6.7.1]`
+            3. Update Evidence Map if new control added
+
+            **Example Mapping**:
+            ```json
+            {
+              "commit_sha": "{{commit_sha}}",
+              "files_changed": ["timbuktoo/security/rbac.py"],
+              "soc2_controls": ["CC6.1.1"],
+              "change_description": "Add new Viewer role"
+            }
+            ```
+          notify: security.lead@timbuktoo.ai
+
+      # Check 2: Cost Anomaly Scan Passed
+      - check: cost_anomaly_scan_passed
+        description: "Scan for token usage spikes, cost regressions, or budget breaches"
+        implementation: python_function
+        function: scan_cost_anomalies
+        parameters:
+          compare_to_baseline: last_30_days
+          detect_anomalies:
+            - token_usage_spike: "> 1.25x baseline"  # >25% increase
+            - average_trip_cost_increase: "> 1.15x baseline"  # >15% increase
+            - p95_trip_cost: "> $0.70"
+            - budget_breach_rate: "> 0%"  # Zero tolerance
+          run_synthetic_tests: true
+          test_trip_count: 10
+        failure_action:
+          type: block_deployment
+          error_message: |
+            ⛔ **Cost Anomaly Detected**
+
+            Deployment introduces cost regressions or anomalies.
+
+            **Anomalies**:
+            {{#each cost_anomalies}}
+            - {{this.anomaly_type}}: {{this.current_value}} (baseline: {{this.baseline_value}}, change: {{this.percent_change}}%)
+            {{/each}}
+
+            **Synthetic Test Results**:
+            - Trips tested: {{synthetic_test_count}}
+            - Average cost: ${{synthetic_avg_cost}} (baseline: ${{baseline_avg_cost}})
+            - Budget breaches: {{synthetic_budget_breaches}}
+
+            **Action**: Investigate cost regression before deploying to production.
+          notify: engineering.lead@timbuktoo.ai
+          create_incident: true
+
+      # Check 3: Test Coverage ≥80%
+      - check: test_coverage_check
+        description: "Ensure code changes have ≥80% test coverage"
+        implementation: github_pr_check
+        check_name: "codecov/patch"
+        parameters:
+          min_coverage_percent: 80
+          min_coverage_lines: 10
+          exclude_paths:
+            - "timbuktoo/data/**"  # Sample data
+            - "scripts/**"  # One-off scripts
+        failure_action:
+          type: block_deployment
+          error_message: |
+            ⛔ **Insufficient Test Coverage**
+
+            Code changes have {{current_coverage}}% coverage (minimum: 80%).
+
+            **Coverage by File**:
+            {{#each coverage_by_file}}
+            - {{this.file}}: {{this.coverage}}% ({{this.lines_covered}}/{{this.total_lines}} lines)
+            {{/each}}
+
+            Add tests before deploying to production.
+          notify: engineering.lead@timbuktoo.ai
+
+      # Check 4: Security Scan Passed (SAST)
+      - check: security_scan_passed
+        description: "Run static application security testing (Snyk, Bandit, Semgrep)"
+        implementation: security_scan
+        tools:
+          - snyk  # Dependency vulnerabilities
+          - bandit  # Python security issues
+          - semgrep  # Code patterns
+        parameters:
+          severity_threshold: medium
+          fail_on_high_severity: true
+          auto_fix_if_possible: true
+        failure_action:
+          type: block_deployment
+          error_message: |
+            ⛔ **Security Vulnerabilities Detected**
+
+            **Vulnerabilities**:
+            {{#each vulnerabilities}}
+            - {{this.tool}}: {{this.severity}} - {{this.title}} ({{this.file}}:{{this.line}})
+              Fix: {{this.recommendation}}
+            {{/each}}
+
+            **Action**: Fix high/medium severity issues before deploying.
+          notify: security.lead@timbuktoo.ai
+
+      # Check 5: Breaking Changes Detected
+      - check: breaking_changes_check
+        description: "Detect API breaking changes (schema, endpoints, contracts)"
+        implementation: api_compatibility_check
+        parameters:
+          check_openapi_schema: true
+          check_database_migrations: true
+          check_response_formats: true
+          breaking_change_indicators:
+            - removed_endpoint
+            - changed_response_schema
+            - removed_field
+            - changed_field_type
+        failure_action:
+          type: require_manual_approval
+          warning_message: |
+            ⚠️ **Breaking Changes Detected**
+
+            **Breaking Changes**:
+            {{#each breaking_changes}}
+            - {{this.type}}: {{this.description}}
+              Impact: {{this.impact}}
+            {{/each}}
+
+            **Recommendation**: Version API (v2) or provide backward compatibility.
+
+            **Approvals Required**: VP Engineering + Platform Owner
+          escalate_to: vp.engineering@timbuktoo.ai
+
+      # Check 6: Rollback Plan Documented
+      - check: rollback_plan_documented
+        description: "Ensure rollback procedure is documented for deployment"
+        implementation: check_jira_field
+        parameters:
+          jira_issue_key: "{{deployment_jira_ticket}}"
+          required_field: Rollback Plan URL
+          validate_url: true
+        failure_action:
+          type: block_deployment
+          error_message: |
+            ⛔ **Rollback Plan Missing**
+
+            Deployment ticket {{deployment_jira_ticket}} does not have rollback plan documented.
+
+            **Action**: Document rollback steps in Confluence or GitHub wiki, then add URL to Jira field "Rollback Plan URL".
+
+            **Rollback Plan Template**: https://wiki.timbuktoo.ai/rollback-template
+          notify: platform.owner@timbuktoo.ai
+
+      # Check 7: Staging Deployment Successful
+      - check: staging_deployment_successful
+        description: "Verify staging deployment succeeded and passed smoke tests"
+        implementation: check_deployment_status
+        parameters:
+          environment: staging
+          required_status: success
+          smoke_tests_passed: true
+          min_uptime_hours: 4
+        failure_action:
+          type: block_deployment
+          error_message: |
+            ⛔ **Staging Deployment Failed**
+
+            Staging deployment has not succeeded or smoke tests failed.
+
+            **Staging Status**: {{staging_deployment_status}}
+            **Smoke Tests**: {{staging_smoke_tests_status}}
+            **Uptime**: {{staging_uptime_hours}} hours (min: 4)
+
+            Fix staging issues before deploying to production.
+
+      # Check 8: Database Migration Safety
+      - check: database_migration_safety
+        description: "Validate database migrations are safe (no data loss, reversible)"
+        implementation: migration_safety_check
+        parameters:
+          detect_destructive_operations:
+            - DROP TABLE
+            - DROP COLUMN
+            - TRUNCATE
+          require_reversible: true
+          require_rollback_sql: true
+        failure_action:
+          type: block_deployment
+          error_message: |
+            ⛔ **Unsafe Database Migration**
+
+            **Destructive Operations Detected**:
+            {{#each destructive_operations}}
+            - {{this.migration_file}}: {{this.operation}} {{this.target}}
+            {{/each}}
+
+            **Action**: Ensure migrations are reversible and include rollback SQL.
+
+            **Migration Safety Checklist**:
+            - [ ] No data loss (backed up before deployment)
+            - [ ] Reversible (rollback SQL provided)
+            - [ ] Tested on staging with production-size data
+          notify: platform.owner@timbuktoo.ai
+
+      # Check 9: Agent Logic Change Review
+      - check: agent_logic_change_review
+        description: "If agent code changed, verify security review completed"
+        implementation: check_jira_automation
+        parameters:
+          jira_automation_rule_id: TRVL-AUTO-002  # Agent Change Risk Control rule
+          required_status: approved
+          paths_to_check:
+            - "timbuktoo/agents/**/*.py"
+        failure_action:
+          type: block_deployment
+          error_message: |
+            ⛔ **Agent Change Security Review Required**
+
+            Agent logic changes detected but security review not completed.
+
+            **Files Changed**:
+            {{#each agent_files_changed}}
+            - {{this.file}}
+            {{/each}}
+
+            **Action**: Complete security review via Jira automation rule TRVL-AUTO-002 before deploying.
+          notify: security.lead@timbuktoo.ai
+
+      # Check 10: Deployment Window Check
+      - check: deployment_window_check
+        description: "Ensure deployment occurs during approved maintenance window"
+        implementation: time_window_check
+        parameters:
+          allowed_windows:
+            - day: tuesday
+              start_hour: 10
+              end_hour: 16
+              timezone: UTC
+            - day: thursday
+              start_hour: 10
+              end_hour: 16
+              timezone: UTC
+          emergency_override_allowed: true
+          override_requires_approval_from: vp.engineering@timbuktoo.ai
+        failure_action:
+          type: warn_outside_window
+          warning_message: |
+            ⚠️ **Outside Maintenance Window**
+
+            Current time: {{current_time_utc}}
+            Allowed windows: Tuesday/Thursday 10:00-16:00 UTC
+
+            **Action**: Schedule deployment during approved window, or request emergency override from VP Engineering.
+          require_override_approval: true
+
+    # Manual Approval Workflow
+    manual_approval:
+      enabled: true
+      approval_form:
+        fields:
+          - field: security_lead_decision
+            type: select
+            options: [approve, reject, request_changes]
+            required: true
+            assigned_to: security.lead@timbuktoo.ai
+
+          - field: platform_owner_decision
+            type: select
+            options: [approve, reject, request_changes]
+            required: true
+            assigned_to: platform.owner@timbuktoo.ai
+
+          - field: vp_engineering_decision
+            type: select
+            options: [approve, reject, request_changes]
+            required: false  # Only if high-risk
+            assigned_to: vp.engineering@timbuktoo.ai
+            required_if:
+              - deployment_risk_level: high
+              - breaking_changes_detected: true
+
+          - field: deployment_notes
+            type: textarea
+            placeholder: "Deployment notes, risks, special instructions"
+            required: true
+            min_length: 50
+
+          - field: monitoring_plan
+            type: textarea
+            placeholder: "Post-deployment monitoring plan (metrics to watch, alert thresholds)"
+            required: true
+
+      approval_logic: all_required_approvers
+      approval_outcomes:
+        all_approved:
+          action: proceed_to_deployment
+          slack_channel: "#deployments"
+          message: |
+            ✅ **Production Deployment Approved**
+
+            **Deployment**: {{deployment_name}}
+            **Jira**: {{deployment_jira_ticket}}
+            **Approvers**: {{approver_list}}
+
+            **Automated Checks**: {{automated_checks_passed_count}}/{{automated_checks_total_count}} passed
+            **Rollback Plan**: {{rollback_plan_url}}
+
+            **Deployment Notes**: {{deployment_notes}}
+            **Monitoring Plan**: {{monitoring_plan}}
+
+            Proceeding with production deployment.
+
+        any_rejected:
+          action: block_deployment
+          slack_channel: "#deployments"
+          message: |
+            ⛔ **Production Deployment Rejected**
+
+            **Deployment**: {{deployment_name}}
+            **Rejected By**: {{rejector_list}}
+            **Reason**: {{rejection_reason}}
+
+            Address issues before re-submitting.
+
+    # Post-Deployment Actions
+    post_deployment_actions:
+      - action: log_audit_event
+        event_type: production_deployment
+        fields:
+          deployment_name: "{{deployment_name}}"
+          jira_ticket: "{{deployment_jira_ticket}}"
+          approvers: "{{approver_list}}"
+          git_commit_sha: "{{commit_sha}}"
+          deployed_at: "{{deployment_timestamp}}"
+          rollback_plan_url: "{{rollback_plan_url}}"
+
+      - action: create_post_deployment_monitoring_task
+        jira_config:
+          summary: "Post-Deployment Monitoring: {{deployment_name}}"
+          description: "{{monitoring_plan}}"
+          assignee: "{{platform_owner_email}}"
+          due_date: "+48h"
+          labels: [post-deployment-monitoring, production]
+
+      - action: send_slack_notification
+        channel: "#deployments"
+        message: |
+          🚀 **Production Deployment Complete**
+
+          **Deployment**: {{deployment_name}}
+          **Status**: {{deployment_status}}
+          **Deployed At**: {{deployment_timestamp}}
+
+          **Post-Deployment Monitoring**: {{monitoring_task_key}} (48-hour watch)
+
+          [Rollback Plan]({{rollback_plan_url}}) | [Monitoring Task]({{monitoring_task_url}})
+
+    # Timeout and Escalation
+    timeout:
+      approval_timeout_hours: 8
+      on_timeout:
+        action: escalate
+        escalate_to: vp.engineering@timbuktoo.ai
+        message: "Production deployment approval pending for 8 hours. Please review urgently."
+
+    # Monitoring Metrics
+    metrics:
+      - metric: deployment_approval_rate
+        calculation: approved / (approved + rejected)
+        target: "> 0.90"
+
+      - metric: cost_anomaly_detection_rate
+        calculation: cost_anomalies_detected / total_deployments
+        target: "< 0.05"  # <5%
+
+      - metric: time_to_approval_hours
+        calculation: approval_timestamp - submission_timestamp
+        target: "< 4 hours"
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# GLOBAL CONFIGURATION
+# ═══════════════════════════════════════════════════════════════════════════════
+
+global_settings:
+  default_timeout_seconds: 60
+  max_retries: 3
+  retry_backoff_strategy: exponential
+  log_all_gate_decisions: true
+  alert_on_gate_failure: true
+  alert_channels:
+    slack: "#wrkflo-alerts"
+    pagerduty: critical_failures_only
+    email: engineering.alerts@timbuktoo.ai
+
+  failure_modes:
+    fail_open: false  # Fail closed (safer for production)
+    degraded_mode_allowed: true
+    manual_override_allowed: true
+    override_requires_approval_from: vp.engineering@timbuktoo.ai
+
+  audit_logging:
+    enabled: true
+    log_destination: SOC2/04_Logging_and_Monitoring/Approval_Gate_Logs/
+    retention_days: 365
+    fields_logged:
+      - gate_id
+      - workflow_id
+      - trip_id
+      - tenant_id
+      - gate_decision
+      - automated_checks_passed
+      - automated_checks_failed
+      - manual_reviewer
+      - approval_timestamp
+      - execution_time_ms
+
+# Environment-Specific Overrides
+environment_overrides:
+  dev:
+    fail_open: true
+    manual_review_skip: true
+    cost_cap_usd: 1.50
+    timeout_multiplier: 2.0
+
+  stage:
+    fail_open: false
+    manual_review_sample_rate: 0.50  # Review 50% in staging
+    cost_cap_usd: 1.00
+    timeout_multiplier: 1.5
+
+  prod:
+    fail_open: false
+    enforce_all_gates: true
+    cost_cap_usd: 0.80
+    timeout_multiplier: 1.0
+    alert_on_all_failures: true
+
+# Metrics and Monitoring
+metrics:
+  - name: gate_execution_count
+    type: counter
+    labels: [gate_id, decision, environment]
+
+  - name: gate_execution_duration_ms
+    type: histogram
+    labels: [gate_id, environment]
+    buckets: [100, 500, 1000, 5000, 10000, 30000]
+
+  - name: gate_approval_rate
+    type: gauge
+    labels: [gate_id, environment]
+
+  - name: gate_manual_review_queue_size
+    type: gauge
+    labels: [gate_id, environment]
+
+# Notification Templates
+notification_templates:
+  gate_blocked:
+    subject: "Approval Gate Blocked: {{gate_name}}"
+    body: |
+      A workflow has been blocked by approval gate.
+
+      **Gate**: {{gate_name}} ({{gate_id}})
+      **Workflow**: {{workflow_id}}
+      **Reason**: {{block_reason}}
+      **Failed Checks**: {{failed_checks_list}}
+
+      Investigate and resolve issues.
+
+  manual_review_required:
+    subject: "Manual Review Required: {{gate_name}}"
+    body: |
+      A workflow is pending manual approval.
+
+      **Gate**: {{gate_name}}
+      **Workflow**: {{workflow_id}}
+      **Review URL**: {{review_url}}
+      **SLA**: {{sla_hours}} hours
+
+      Please review and approve/reject.
+
+# Conclusion
+# These three comprehensive approval gates provide production-grade controls for:
+# 1. City Ingestion: Data quality, source attribution, hallucination prevention
+# 2. Itinerary Generation: Budget enforcement, safety rules, variant compliance
+# 3. Production Deploy: SOC-2 compliance, cost anomaly detection, security review
+
+# All gates include automated checks, manual review workflows, audit logging, and metrics.
