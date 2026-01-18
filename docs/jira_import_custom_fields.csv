@@ -1,0 +1,34 @@
+Issue Type,Issue Key,Summary,Description,Priority,Epic Name,Epic Link,Component Area,Agent Type,Data Sensitivity,SLO Impact,Cost Tier,Release Phase,Labels
+Epic,TRVL-CORE-001,Knowledge Infrastructure,Core vector and relational data layer,P0,Knowledge Infrastructure,,Platform,None,Low,High,Medium,GA,vector rag db
+Story,TRVL-101,Create Vector Collection,"Implement city_knowledge_vectors with metadata filters and indexing.",P0,,TRVL-CORE-001,ML,None,Low,High,Medium,GA,vector schema
+Story,TRVL-102,Relational Schema,"Create cities, entities, vectors, trips, feedback tables with FK constraints.",P0,,TRVL-CORE-001,Backend,None,Low,High,Low,GA,sql db
+Epic,TRVL-INGEST-002,City Ingestion,Automated city ingestion pipeline,P0,City Ingestion,,Data,None,Low,Medium,Medium,GA,etl ingest
+Story,TRVL-201,City Ingestion Pipeline,"Normalize → enrich → embed → QA (<30 min).",P0,,TRVL-INGEST-002,Data,None,Low,Medium,Medium,GA,etl
+Task,TRVL-202,Load Pilot Cities,"Mexico City, Barcelona, Tokyo, Lisbon, NYC.",P0,,TRVL-INGEST-002,Data,None,Low,Low,Medium,GA,pilot cities
+Epic,TRVL-AGENT-003,Agent Orchestration,Multi-agent routing and shared memory,P0,Agent Orchestration,,Platform,None,Low,High,Medium,GA,agents router
+Story,TRVL-301,Agent Router,"Deterministic sequencing and strict JSON validation.",P0,,TRVL-AGENT-003,Backend,All,Low,High,Medium,GA,router
+Story,TRVL-302,Shared Trip Memory,"Immutable trip context persisted across agents.",P0,,TRVL-AGENT-003,Backend,All,Low,High,Low,GA,state context
+Epic,TRVL-TOOLS-004,Real-Time Tools,Weather and events integrations,P1,Real-Time Tools,,Platform,None,Low,Medium,Low,Beta,tools
+Story,TRVL-401,Weather Tool,"7-day forecast integrated into itinerary logic.",P1,,TRVL-TOOLS-004,Backend,None,Low,Medium,Low,Beta,weather
+Story,TRVL-402,Events Tool,"City/date-filtered events feed.",P1,,TRVL-TOOLS-004,Backend,None,Low,Medium,Low,Beta,events
+Epic,TRVL-LEARN-005,Feedback & Learning,Feedback capture and re-ranking,P1,Feedback & Learning,,Platform,None,Medium,Medium,Low,Beta,feedback
+Story,TRVL-501,Feedback API/UI,"Day-level ratings and comments per trip.",P1,,TRVL-LEARN-005,Frontend,None,Medium,Low,Low,Beta,ui feedback
+Story,TRVL-502,Feedback Weighting,"Weekly entity re-ranking from feedback.",P2,,TRVL-LEARN-005,ML,None,Low,Low,Low,Beta,ranking ml
+Epic,TRVL-COST-006,Cost Controls & Monitoring,Token tracking and budget enforcement,P0,Cost Controls & Monitoring,,Platform,None,Low,High,Medium,GA,cost finops
+Story,TRVL-601,Cost Controller,"Per-trip budget cap ($0.80) with degradation strategy.",P0,,TRVL-COST-006,Backend,None,Low,High,Medium,GA,cost budget
+Story,TRVL-602,Cost Dashboards,"Grafana dashboards with anomaly detection (5 rules).",P1,,TRVL-COST-006,Platform,None,Low,Medium,Low,GA,finops monitoring
+Epic,TRVL-TENANT-007,Multi-Tenancy,Schema-per-tenant isolation and quotas,P0,Multi-Tenancy,,Backend,None,Medium,High,Medium,GA,multi-tenant saas
+Story,TRVL-701,Tenant Schema Isolation,"PostgreSQL schema-per-tenant with namespace isolation.",P0,,TRVL-TENANT-007,Backend,None,Medium,High,Medium,GA,tenant isolation
+Story,TRVL-702,Onboarding Flow,"7-step customer onboarding with city recommendation.",P1,,TRVL-TENANT-007,Frontend,None,Low,Medium,Low,GA,onboarding ui
+Story,TRVL-703,Usage Quotas,"Enforce quotas per tier (Starter 10/mo, Pro unlimited).",P0,,TRVL-TENANT-007,Backend,None,Medium,High,Low,GA,quotas
+Epic,TRVL-SEC-008,Security & Compliance,RBAC and SOC-2 readiness,P0,Security & Compliance,,Platform,None,High,High,Low,GA,security compliance
+Story,TRVL-801,RBAC Implementation,"Role-based access control (Admin/Operator/Viewer).",P0,,TRVL-SEC-008,Backend,None,High,High,Low,GA,rbac security
+Story,TRVL-802,Audit Logging,"Comprehensive audit logs (auth, data access, changes).",P0,,TRVL-SEC-008,Backend,None,High,High,Low,GA,audit logging
+Story,TRVL-803,SOC-2 Preparation,"Evidence collection and control documentation.",P1,,TRVL-SEC-008,Platform,None,Medium,Medium,Low,GA,soc2 compliance
+Epic,TRVL-DEPLOY-009,Deployment & DevOps,CI/CD and infrastructure automation,P0,Deployment & DevOps,,Platform,None,Low,High,Medium,GA,devops cicd
+Story,TRVL-901,CI/CD Pipeline,"GitHub Actions workflow: test → build → deploy.",P0,,TRVL-DEPLOY-009,Platform,None,Low,High,Medium,GA,cicd github
+Story,TRVL-902,Infrastructure as Code,"Terraform configs for AWS (RDS, ECS, S3, ALB).",P1,,TRVL-DEPLOY-009,Platform,None,Low,Medium,Medium,GA,terraform iac
+Epic,TRVL-ABTEST-010,A/B Testing,Variant assignment and performance analytics,P1,A/B Testing,,ML,None,Low,Medium,Low,Beta,ab-test experimentation
+Story,TRVL-1001,Variant Assignment,"Deterministic MD5-based 50/50 split (Control vs Slow Hidden Gems).",P1,,TRVL-ABTEST-010,Backend,None,Low,Medium,Low,Beta,variant assignment
+Story,TRVL-1002,Performance Analytics,"Compare variants: overall rating, pacing complaints, completion rate.",P1,,TRVL-ABTEST-010,ML,None,Low,Medium,Low,Beta,analytics metrics
+Story,TRVL-1003,Experiment Dashboard,"Real-time variant performance with statistical significance.",P2,,TRVL-ABTEST-010,Frontend,None,Low,Low,Low,Beta,dashboard ui

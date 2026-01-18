@@ -1,0 +1,501 @@
+approval_gates:
+  # Gate 1: Pre-Workflow Execution Budget Check
+  - id: budget_check_gate
+    name: "Budget Approval Gate"
+    trigger: workflow_start
+    position: before_node_1
+    type: automated
+
+    validation:
+      - check: tenant_quota_available
+        resource: itineraries
+        threshold: 1
+        failure_action:
+          type: reject
+          message: "Tenant quota exceeded. Please upgrade your plan or wait for quota reset."
+          http_code: 429
+
+      - check: monthly_budget_remaining
+        min_remaining_usd: 100
+        failure_action:
+          type: alert
+          notify: finops-team
+          proceed: true
+
+    approval_logic: all_checks_pass
+    timeout_seconds: 5
+
+  # Gate 2: City Selection Quality Gate
+  - id: city_selection_gate
+    name: "City Selection Quality Gate"
+    trigger: node_complete
+    node: city_selection
+    type: automated
+
+    validation:
+      - check: output_valid_json
+        schema: city_selection_output_schema
+        failure_action:
+          type: retry
+          max_attempts: 2
+          fallback: use_default_city
+
+      - check: ranked_cities_count
+        expected: 3
+        failure_action:
+          type: reject
+          message: "City Selection agent must return exactly 3 ranked cities"
+
+      - check: city_score_range
+        min: 0
+        max: 100
+        failure_action:
+          type: reject
+          message: "City scores must be between 0-100"
+
+      - check: top_city_score_threshold
+        min_score: 60
+        failure_action:
+          type: manual_review
+          reviewers: [product-manager@timbuktoo.ai]
+          message: "Top city score is below 60. Manual review required."
+
+    approval_logic: all_checks_pass_or_manual_approved
+    timeout_seconds: 300  # 5 min for manual review
+
+  # Gate 3: Vector Search Quality Gate
+  - id: vector_search_gate
+    name: "Vector Search Quality Gate"
+    trigger: node_complete
+    node: local_expert
+    type: automated
+
+    validation:
+      - check: vector_chunks_retrieved
+        min: 10
+        max: 60
+        failure_action:
+          type: alert
+          message: "Unusual vector chunk count: {{chunks_retrieved}}"
+
+      - check: vector_search_latency
+        max_ms: 200
+        failure_action:
+          type: alert
+          notify: ml-team
+          proceed: true
+
+      - check: trust_tier_distribution
+        min_tier_4_or_5_percent: 70
+        failure_action:
+          type: log_warning
+          message: "Low trust tier sources: {{tier_4_5_percent}}% (target: 70%+)"
+
+    approval_logic: continue_with_warnings
+    timeout_seconds: 10
+
+  # Gate 4: Cost Budget Gate (Before Concierge)
+  - id: cost_budget_gate
+    name: "Trip Cost Budget Gate"
+    trigger: before_node
+    node: concierge
+    type: automated
+
+    validation:
+      - check: current_trip_cost
+        max_usd: 0.50
+        failure_action:
+          type: degrade
+          strategy: reduced  # Reduce tokens from 38k to 25k
+          message: "Current cost ${{current_cost}}. Applying reduced strategy."
+
+      - check: remaining_budget
+        min_usd: 0.30
+        failure_action:
+          type: degrade
+          strategy: minimal  # Reduce tokens to 15k, chunks to 10
+          message: "Budget headroom critical. Applying minimal strategy."
+
+      - check: budget_hard_cap
+        max_usd: 0.80
+        failure_action:
+          type: reject
+          message: "Budget hard cap ($0.80) would be exceeded. Trip aborted."
+
+    approval_logic: apply_degradation_if_needed
+    timeout_seconds: 2
+
+  # Gate 5: Itinerary Quality Gate
+  - id: itinerary_quality_gate
+    name: "Itinerary Quality Assurance Gate"
+    trigger: node_complete
+    node: concierge
+    type: automated_with_sampling
+
+    validation:
+      - check: itinerary_days_count
+        expected: 7
+        failure_action:
+          type: retry
+          max_attempts: 1
+          message: "Itinerary must have exactly 7 days"
+
+      - check: daily_activities_count
+        variant: control
+        min_per_day: 2
+        max_per_day: 3
+        failure_action:
+          type: log_warning
+          message: "Control variant: {{activities_count}} activities/day (expected: 2-3)"
+
+      - check: daily_activities_count
+        variant: slow_hidden_gems
+        min_per_day: 1
+        max_per_day: 2
+        failure_action:
+          type: log_warning
+          message: "Slow variant: {{activities_count}} activities/day (expected: 1-2)"
+
+      - check: daily_budget_realistic
+        max_per_day_usd: 500
+        failure_action:
+          type: manual_review
+          reviewers: [product-manager@timbuktoo.ai]
+          sample_rate: 0.1  # Review 10% of flagged trips
+
+      - check: output_valid_json
+        schema: concierge_output_schema
+        failure_action:
+          type: retry
+          max_attempts: 1
+
+      - check: packing_list_present
+        required: true
+        failure_action:
+          type: log_warning
+          proceed: true
+
+    approval_logic: critical_checks_pass_and_sample_review
+    timeout_seconds: 600  # 10 min for manual review if needed
+
+  # Gate 6: PII Detection Gate
+  - id: pii_detection_gate
+    name: "PII Detection and Removal Gate"
+    trigger: before_workflow_complete
+    type: automated
+
+    validation:
+      - check: scan_for_email
+        regex: "[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}"
+        failure_action:
+          type: redact
+          replacement: "[EMAIL_REDACTED]"
+
+      - check: scan_for_phone
+        regex: "\\+?\\d{10,15}"
+        failure_action:
+          type: redact
+          replacement: "[PHONE_REDACTED]"
+
+      - check: scan_for_ssn
+        regex: "\\d{3}-\\d{2}-\\d{4}"
+        failure_action:
+          type: reject
+          message: "PII detected: SSN found in output. Trip rejected."
+
+      - check: scan_for_credit_card
+        regex: "\\d{4}[\\s-]?\\d{4}[\\s-]?\\d{4}[\\s-]?\\d{4}"
+        failure_action:
+          type: reject
+          message: "PII detected: Credit card found. Trip rejected."
+
+    approval_logic: no_critical_pii_detected
+    timeout_seconds: 5
+
+  # Gate 7: Variant Assignment Validation
+  - id: variant_assignment_gate
+    name: "A/B Test Variant Assignment Gate"
+    trigger: before_node
+    node: concierge
+    type: automated
+
+    validation:
+      - check: variant_assigned
+        required: true
+        values: [control, slow_hidden_gems]
+        failure_action:
+          type: assign_default
+          default_variant: control
+
+      - check: variant_distribution_balance
+        window: last_100_trips
+        target_split: 0.50
+        tolerance: 0.10  # Allow 40/60 to 60/40
+        failure_action:
+          type: force_balance
+          message: "Variant imbalance detected. Forcing underrepresented variant."
+
+      - check: variant_deterministic
+        verify: md5_hash_consistent
+        failure_action:
+          type: alert
+          notify: ml-team
+          message: "Variant assignment not deterministic for trip {{trip_id}}"
+
+    approval_logic: variant_valid_and_balanced
+    timeout_seconds: 2
+
+  # Gate 8: Multi-Tenant Isolation Gate
+  - id: tenant_isolation_gate
+    name: "Multi-Tenant Data Isolation Gate"
+    trigger: workflow_start
+    type: automated
+    enabled_if: multi_tenant_mode
+
+    validation:
+      - check: tenant_id_present
+        required: true
+        failure_action:
+          type: reject
+          message: "Tenant ID required for multi-tenant workflows"
+
+      - check: tenant_active
+        status: active
+        failure_action:
+          type: reject
+          message: "Tenant status is {{tenant_status}}. Only active tenants allowed."
+
+      - check: tenant_subscription_valid
+        check_expiry: true
+        failure_action:
+          type: reject
+          message: "Tenant subscription expired on {{expiry_date}}"
+
+      - check: tenant_schema_exists
+        postgresql_schema: "tenant_{{tenant_id}}"
+        failure_action:
+          type: alert
+          notify: devops-team
+          message: "Tenant schema missing. Creating..."
+          auto_remediate: create_tenant_schema
+
+    approval_logic: tenant_valid_and_isolated
+    timeout_seconds: 10
+
+  # Gate 9: Production Deployment Gate
+  - id: production_deployment_gate
+    name: "Production Deployment Approval Gate"
+    trigger: deployment_requested
+    environment: production
+    type: manual
+
+    validation:
+      - check: all_tests_passed
+        required: true
+        failure_action:
+          type: block
+          message: "All tests must pass before production deployment"
+
+      - check: security_scan_passed
+        tools: [snyk, bandit, semgrep]
+        failure_action:
+          type: block
+          message: "Security vulnerabilities detected. Fix before deploying."
+
+      - check: no_breaking_changes
+        api_compatibility: true
+        failure_action:
+          type: manual_review
+          reviewers: [engineering-lead@timbuktoo.ai, product-manager@timbuktoo.ai]
+
+      - check: rollback_plan_documented
+        required: true
+        failure_action:
+          type: manual_review
+          reviewers: [devops-lead@timbuktoo.ai]
+
+    approvers:
+      - role: engineering_lead
+        required: true
+      - role: devops_lead
+        required: true
+      - role: product_manager
+        required: false  # Optional for minor releases
+
+    approval_logic: all_required_approvers
+    timeout_seconds: 86400  # 24 hours
+
+  # Gate 10: High-Cost Trip Review Gate
+  - id: high_cost_trip_gate
+    name: "High-Cost Trip Review Gate"
+    trigger: node_complete
+    node: concierge
+    type: manual_sampling
+
+    validation:
+      - check: trip_cost_threshold
+        threshold_usd: 0.60
+        sample_rate: 0.05  # Review 5% of trips over $0.60
+        failure_action:
+          type: manual_review
+          reviewers: [engineering-lead@timbuktoo.ai]
+          message: "High-cost trip detected: ${{trip_cost}}. Sample review requested."
+
+      - check: token_usage_anomaly
+        z_score_threshold: 2.5  # Flag if >2.5 std devs from mean
+        failure_action:
+          type: manual_review
+          reviewers: [ml-team@timbuktoo.ai]
+          message: "Anomalous token usage: {{token_count}} (z-score: {{z_score}})"
+
+    approval_logic: pass_or_sample_approved
+    timeout_seconds: 3600  # 1 hour for manual review
+
+
+# Global Gate Configuration
+global_settings:
+  default_timeout_seconds: 30
+  max_retries: 2
+  retry_backoff_strategy: exponential
+  log_all_gate_decisions: true
+  alert_on_gate_failure: true
+  alert_channels:
+    - slack: "#wrkflo-alerts"
+    - pagerduty: critical_failures_only
+
+  failure_modes:
+    fail_open: false  # Reject on gate failure (safer for production)
+    degraded_mode_allowed: true  # Allow cost degradation
+    manual_override_allowed: true  # Ops can bypass gates in emergencies
+
+  audit_logging:
+    enabled: true
+    log_destination: postgres_audit_logs
+    retention_days: 365
+    fields_logged:
+      - gate_id
+      - workflow_id
+      - trip_id
+      - tenant_id
+      - gate_decision
+      - validation_results
+      - approver_user_id
+      - timestamp
+      - execution_time_ms
+
+# Environment-Specific Overrides
+environment_overrides:
+  dev:
+    fail_open: true  # Allow failures in dev
+    manual_review_skip: true
+    timeout_multiplier: 2.0
+
+  stage:
+    fail_open: false
+    manual_review_sample_rate_multiplier: 0.5  # Half sample rate
+    timeout_multiplier: 1.5
+
+  prod:
+    fail_open: false
+    enforce_all_gates: true
+    timeout_multiplier: 1.0
+    alert_on_all_failures: true
+
+
+# Gate Metrics and Monitoring
+metrics:
+  - name: gate_execution_count
+    type: counter
+    labels: [gate_id, decision, environment]
+
+  - name: gate_execution_duration_ms
+    type: histogram
+    labels: [gate_id, environment]
+    buckets: [10, 50, 100, 500, 1000, 5000, 10000]
+
+  - name: gate_approval_rate
+    type: gauge
+    labels: [gate_id, environment]
+    calculation: approved / (approved + rejected)
+
+  - name: gate_manual_review_queue_size
+    type: gauge
+    labels: [gate_id, environment]
+
+  - name: gate_timeout_count
+    type: counter
+    labels: [gate_id, environment]
+
+
+# Notification Templates
+notification_templates:
+  budget_exceeded:
+    subject: "Workflow Budget Gate Triggered"
+    body: |
+      Budget gate rejected workflow execution.
+
+      Workflow ID: {{workflow_id}}
+      Tenant: {{tenant_id}}
+      Current Cost: ${{current_cost}}
+      Budget Cap: ${{budget_cap}}
+      Remaining: ${{remaining_budget}}
+
+      Action: Workflow aborted.
+
+  manual_review_required:
+    subject: "Manual Review Required: {{gate_name}}"
+    body: |
+      A workflow is pending manual approval.
+
+      Gate: {{gate_name}}
+      Workflow ID: {{workflow_id}}
+      Trip ID: {{trip_id}}
+      Reason: {{review_reason}}
+
+      Review URL: {{review_url}}
+      Timeout: {{timeout_minutes}} minutes
+
+  gate_failure_alert:
+    subject: "Gate Failure Alert: {{gate_id}}"
+    body: |
+      A workflow gate has failed.
+
+      Gate: {{gate_id}}
+      Workflow: {{workflow_id}}
+      Environment: {{environment}}
+      Failure Reason: {{failure_reason}}
+
+      Investigate immediately.
+
+
+# Manual Review UI Configuration
+manual_review_ui:
+  enabled: true
+  url_base: https://wrkflo.timbuktoo.ai/reviews
+
+  review_form_fields:
+    - field: reviewer_decision
+      type: select
+      options: [approve, reject, request_changes]
+      required: true
+
+    - field: reviewer_comments
+      type: textarea
+      required: true
+      min_length: 20
+
+    - field: override_reason
+      type: textarea
+      required_if: decision == approve AND validation_failed
+      min_length: 50
+
+  review_sla:
+    p0_gates: 30_minutes
+    p1_gates: 2_hours
+    p2_gates: 24_hours
+
+  escalation_policy:
+    - after_minutes: 60
+      escalate_to: engineering_manager
+    - after_minutes: 240
+      escalate_to: vp_engineering

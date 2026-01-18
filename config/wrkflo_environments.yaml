@@ -1,0 +1,54 @@
+environments:
+  dev:
+    logging: debug
+    vector_db:
+      index: city_vectors_dev
+      max_chunks: 60
+    agents:
+      city_selection:
+        max_tokens: 6000
+      local_expert:
+        max_tokens: 30000
+      concierge:
+        max_tokens: 50000
+    tools:
+      weather_cache_ttl: 1h
+      events_cache_ttl: 6h
+    cost_controls:
+      hard_trip_cap_usd: 1.50
+
+  stage:
+    logging: info
+    vector_db:
+      index: city_vectors_stage
+      max_chunks: 45
+    agents:
+      city_selection:
+        max_tokens: 5000
+      local_expert:
+        max_tokens: 25000
+      concierge:
+        max_tokens: 40000
+    tools:
+      weather_cache_ttl: 6h
+      events_cache_ttl: 24h
+    cost_controls:
+      hard_trip_cap_usd: 1.00
+
+  prod:
+    logging: warn
+    vector_db:
+      index: city_vectors_prod
+      max_chunks: 35
+    agents:
+      city_selection:
+        max_tokens: 4000
+      local_expert:
+        max_tokens: 22000
+      concierge:
+        max_tokens: 38000
+    tools:
+      weather_cache_ttl: 24h
+      events_cache_ttl: 72h
+    cost_controls:
+      hard_trip_cap_usd: 0.80
