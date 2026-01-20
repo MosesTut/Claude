@@ -1,0 +1,110 @@
+# GitHub Actions CI/CD Pipeline
+# Runs on every push and pull request
+
+name: CI
+
+on:
+  push:
+    branches: [ main, develop, claude/* ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  # Backend Tests
+  backend-test:
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:15-alpine
+        env:
+          POSTGRES_USER: timbuktoo
+          POSTGRES_PASSWORD: test_password
+          POSTGRES_DB: timbuktoo_test
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Set up Python 3.11
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+
+    - name: Install dependencies
+      run: |
+        cd backend
+        pip install --upgrade pip
+        pip install -r requirements.txt
+
+    - name: Run syntax checks
+      run: |
+        cd backend
+        python -m py_compile app/**/*.py
+
+    - name: Run database migrations
+      env:
+        DATABASE_URL: postgresql://timbuktoo:test_password@localhost:5432/timbuktoo_test
+      run: |
+        cd backend
+        alembic upgrade head
+
+    # TODO: Add pytest when tests are implemented
+    # - name: Run tests
+    #   run: |
+    #     cd backend
+    #     pytest tests/ -v
+
+  # Mobile TypeScript Checks
+  mobile-check:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Set up Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '18'
+
+    - name: Install dependencies
+      run: |
+        cd mobile
+        npm install
+
+    - name: TypeScript type checking
+      run: |
+        cd mobile
+        npx tsc --noEmit
+
+    # TODO: Add Jest tests when tests are implemented
+    # - name: Run tests
+    #   run: |
+    #     cd mobile
+    #     npm test
+
+  # Linting (Optional)
+  lint:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Check Python code style
+      run: |
+        pip install flake8
+        cd backend
+        flake8 app/ --max-line-length=120 --ignore=E501,W503 || true
+
+    - name: Check Markdown files
+      uses: gaurav-nelson/github-action-markdown-link-check@v1
+      with:
+        config-file: '.markdown-link-check.json'
+        folder-path: 'docs'
+      continue-on-error: true
