@@ -20,11 +20,7 @@ export default function OnboardingScreen({ navigation }: OnboardingScreenProps) 
     <SafeAreaView style={styles.container}>
       <ScrollView contentContainerStyle={styles.scrollContent}>
         <View style={styles.header}>
-          <Image
-            source={require('../../assets/logo.png')}
-            style={styles.logo}
-            resizeMode="contain"
-          />
+          <Text style={styles.logoText}>🌍</Text>
           <Text style={styles.title}>Welcome to Timbuktoo</Text>
         </View>
 
@@ -102,9 +98,8 @@ const styles = StyleSheet.create({
     marginTop: 40,
     marginBottom: 32,
   },
-  logo: {
-    width: 80,
-    height: 80,
+  logoText: {
+    fontSize: 64,
     marginBottom: 16,
   },
   title: {

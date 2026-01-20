@@ -1,18 +1,17 @@
 import React, { useState } from 'react';
 import {
   View,
-  Text,
   StyleSheet,
-  SafeAreaView,
   ScrollView,
   Alert,
 } from 'react-native';
-import { Button, TextInput, RadioButton } from 'react-native-paper';
+import { Button, TextInput, RadioButton, Text } from 'react-native-paper';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RouteProp } from '@react-navigation/native';
 import { RootStackParamList } from '../../App';
-import * as SecureStore from 'expo-secure-store';
-import { feedbackAPI } from '../api/feedback';
+import apiClient from '../services/api';
+import { ENDPOINTS } from '../config/api';
+import { FeedbackType } from '../types';
 
 type FeedbackScreenProps = {
   navigation: NativeStackNavigationProp<RootStackParamList, 'Feedback'>;
@@ -24,80 +23,64 @@ export default function FeedbackScreen({
   route,
 }: FeedbackScreenProps) {
   const { itineraryId } = route.params;
-  const [rating, setRating] = useState<'helpful' | 'not-helpful' | null>(null);
-  const [reportType, setReportType] = useState<string>('');
+  const [feedbackType, setFeedbackType] = useState<FeedbackType>('other');
   const [comments, setComments] = useState('');
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async () => {
-    if (!rating && !reportType) {
-      Alert.alert('Error', 'Please provide feedback or report an issue');
-      return;
-    }
-
     setLoading(true);
 
     try {
-      const token = await SecureStore.getItemAsync('authToken');
-      if (!token) throw new Error('Not authenticated');
-
-      await feedbackAPI.submitFeedback(token, {
-        itineraryId,
-        rating,
-        reportType,
-        comments,
+      await apiClient.post(ENDPOINTS.SUBMIT_FEEDBACK, {
+        itinerary_id: itineraryId,
+        feedback_type: feedbackType,
+        comments: comments || undefined,
       });
 
       Alert.alert(
         'Thank You',
-        'Your feedback helps us improve recommendations.',
+        'Your feedback has been submitted and will be reviewed within 48 hours.',
         [
           {
             text: 'OK',
-            onPress: () => navigation.navigate('Preferences'),
+            onPress: () => navigation.goBack(),
           },
         ]
       );
     } catch (error: any) {
-      Alert.alert('Error', 'Failed to submit feedback. Please try again.');
+      Alert.alert('Error', error.response?.data?.detail || 'Failed to submit feedback');
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <SafeAreaView style={styles.container}>
-      <ScrollView contentContainerStyle={styles.scrollContent}>
-        <View style={styles.header}>
-          <Text style={styles.title}>How was your itinerary?</Text>
-          <Text style={styles.subtitle}>
-            Your feedback helps improve AI recommendations
-          </Text>
-        </View>
+    <ScrollView style={styles.container} contentContainerStyle={styles.scrollContent}>
+      <Text variant="headlineMedium" style={styles.title}>
+        Report an Issue
+      </Text>
 
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Overall Rating</Text>
-          <View style={styles.ratingContainer}>
-            <Button
-              mode={rating === 'helpful' ? 'contained' : 'outlined'}
-              onPress={() => setRating('helpful')}
-              icon="thumb-up"
-              style={styles.ratingButton}
-            >
-              👍 Helpful
-            </Button>
-            <Button
-              mode={rating === 'not-helpful' ? 'contained' : 'outlined'}
-              onPress={() => setRating('not-helpful')}
-              icon="thumb-down"
-              style={styles.ratingButton}
-            >
-              👎 Not Helpful
-            </Button>
-          </View>
-        </View>
+      <Text variant="bodyMedium" style={styles.subtitle}>
+        Help us improve by reporting issues with AI-generated content
+      </Text>
 
-        <View style={styles.section}>
+      <View style={styles.section}>
+        <Text variant="titleMedium" style={styles.sectionTitle}>
+          What's the issue?
+        </Text>
+
+        <RadioButton.Group
+          onValueChange={value => setFeedbackType(value as FeedbackType)}
+          value={feedbackType}
+        >
+          <RadioButton.Item label="Inaccurate information" value="inaccurate" />
+          <RadioButton.Item label="Inappropriate content" value="inappropriate" />
+          <RadioButton.Item label="Missing information" value="missing_information" />
+          <RadioButton.Item label="Other" value="other" />
+        </RadioButton.Group>
+      </View>
+
+      <View style={styles.section}>
           <Text style={styles.sectionTitle}>⚠️ Report an Issue</Text>
           <Text style={styles.sectionSubtitle}>
             Required for AI-generated content apps

@@ -22,10 +22,10 @@ export type RootStackParamList = {
   Onboarding: undefined;
   AIDisclosure: undefined;
   DataUse: undefined;
-  Auth: { mode: 'login' | 'signup' };
+  Auth: { mode?: 'login' | 'signup' };
   Preferences: undefined;
   CityRecommendation: undefined;
-  Itinerary: { cityId: string; cityName: string };
+  Itinerary: { itineraryId: string };
   Feedback: { itineraryId: string };
   Settings: undefined;
 };

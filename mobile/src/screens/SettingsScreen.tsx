@@ -1,19 +1,16 @@
 import React, { useState } from 'react';
 import {
   View,
-  Text,
   StyleSheet,
-  SafeAreaView,
   ScrollView,
   Alert,
   Linking,
 } from 'react-native';
-import { List, Button, Dialog, Portal, Paragraph } from 'react-native-paper';
+import { List, Button, Dialog, Portal, Text } from 'react-native-paper';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../App';
-import * as SecureStore from 'expo-secure-store';
-import { authAPI } from '../api/auth';
-import { userAPI } from '../api/user';
+import apiClient, { clearAuthToken } from '../services/api';
+import { ENDPOINTS } from '../config/api';
 
 type SettingsScreenProps = {
   navigation: NativeStackNavigationProp<RootStackParamList, 'Settings'>;
@@ -31,12 +28,10 @@ export default function SettingsScreen({ navigation }: SettingsScreenProps) {
         style: 'destructive',
         onPress: async () => {
           try {
-            await authAPI.logout();
-            await SecureStore.deleteItemAsync('authToken');
-            await SecureStore.deleteItemAsync('userId');
+            await clearAuthToken();
             navigation.reset({
               index: 0,
-              routes: [{ name: 'Auth', params: { mode: 'login' } }],
+              routes: [{ name: 'Onboarding' }],
             });
           } catch (error) {
             Alert.alert('Error', 'Failed to log out. Please try again.');
@@ -51,15 +46,10 @@ export default function SettingsScreen({ navigation }: SettingsScreenProps) {
     setDeleting(true);
 
     try {
-      const token = await SecureStore.getItemAsync('authToken');
-      if (!token) throw new Error('Not authenticated');
-
-      await userAPI.deleteAccount(token);
+      await apiClient.delete(ENDPOINTS.DELETE_ACCOUNT);
 
       // Clear local data
-      await SecureStore.deleteItemAsync('authToken');
-      await SecureStore.deleteItemAsync('userId');
-      await SecureStore.deleteItemAsync('hasLaunched');
+      await clearAuthToken();
 
       Alert.alert(
         'Account Deleted',
@@ -76,7 +66,7 @@ export default function SettingsScreen({ navigation }: SettingsScreenProps) {
         ]
       );
     } catch (error: any) {
-      Alert.alert('Error', 'Failed to delete account. Please contact support.');
+      Alert.alert('Error', error.response?.data?.detail || 'Failed to delete account. Please contact support.');
     } finally {
       setDeleting(false);
     }
