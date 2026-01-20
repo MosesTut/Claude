@@ -1,0 +1,560 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Timbuktoo Trust Center - Security, compliance, and transparency for our customers.">
+    <title>Timbuktoo Trust Center</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background-color: #f9f9f9;
+        }
+
+        header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 60px 20px;
+            text-align: center;
+        }
+
+        header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+
+        header p {
+            font-size: 1.2rem;
+            opacity: 0.9;
+        }
+
+        nav {
+            background-color: white;
+            padding: 15px 0;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        nav ul {
+            list-style: none;
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        nav li {
+            margin: 0 20px;
+        }
+
+        nav a {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.3s;
+        }
+
+        nav a:hover {
+            color: #764ba2;
+        }
+
+        main {
+            max-width: 1200px;
+            margin: 40px auto;
+            padding: 0 20px;
+        }
+
+        section {
+            background-color: white;
+            margin-bottom: 30px;
+            padding: 40px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+
+        section h2 {
+            color: #667eea;
+            font-size: 2rem;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #667eea;
+            padding-bottom: 10px;
+        }
+
+        section h3 {
+            color: #764ba2;
+            font-size: 1.5rem;
+            margin-top: 30px;
+            margin-bottom: 15px;
+        }
+
+        section p {
+            margin-bottom: 15px;
+            line-height: 1.8;
+        }
+
+        section ul {
+            margin: 20px 0;
+            padding-left: 20px;
+        }
+
+        section ul li {
+            margin-bottom: 10px;
+            line-height: 1.8;
+        }
+
+        .badge {
+            display: inline-block;
+            background-color: #4CAF50;
+            color: white;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            margin-right: 10px;
+            margin-bottom: 10px;
+        }
+
+        .badge.in-progress {
+            background-color: #FF9800;
+        }
+
+        .badge.planned {
+            background-color: #2196F3;
+        }
+
+        .document-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .document-card {
+            background-color: #f5f7fa;
+            padding: 20px;
+            border-radius: 8px;
+            border-left: 4px solid #667eea;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .document-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+
+        .document-card h4 {
+            color: #667eea;
+            margin-bottom: 10px;
+            font-size: 1.1rem;
+        }
+
+        .document-card p {
+            font-size: 0.9rem;
+            color: #666;
+            margin-bottom: 15px;
+        }
+
+        .document-card a {
+            display: inline-block;
+            background-color: #667eea;
+            color: white;
+            padding: 8px 20px;
+            border-radius: 5px;
+            text-decoration: none;
+            font-weight: 500;
+            transition: background-color 0.3s;
+        }
+
+        .document-card a:hover {
+            background-color: #764ba2;
+        }
+
+        .lock-icon {
+            font-size: 0.9rem;
+            margin-left: 5px;
+        }
+
+        footer {
+            background-color: #333;
+            color: white;
+            text-align: center;
+            padding: 40px 20px;
+            margin-top: 60px;
+        }
+
+        footer a {
+            color: #667eea;
+            text-decoration: none;
+        }
+
+        footer a:hover {
+            text-decoration: underline;
+        }
+
+        .status-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .status-item {
+            text-align: center;
+            padding: 20px;
+            background-color: #f5f7fa;
+            border-radius: 8px;
+        }
+
+        .status-item h4 {
+            font-size: 2rem;
+            color: #4CAF50;
+            margin-bottom: 10px;
+        }
+
+        .status-item p {
+            font-size: 0.9rem;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Timbuktoo Trust Center</h1>
+        <p>Security, compliance, and transparency for our customers.</p>
+    </header>
+
+    <nav>
+        <ul>
+            <li><a href="#overview">Overview</a></li>
+            <li><a href="#security">Security</a></li>
+            <li><a href="#compliance">Compliance</a></li>
+            <li><a href="#privacy">Privacy</a></li>
+            <li><a href="#ai">AI Governance</a></li>
+            <li><a href="#availability">Availability</a></li>
+            <li><a href="#documents">Documents</a></li>
+        </ul>
+    </nav>
+
+    <main>
+        <section id="overview">
+            <h2>Overview</h2>
+            <p>Timbuktoo is built with enterprise-grade security, privacy, and AI governance. We are committed to protecting customer data and maintaining the highest standards of compliance.</p>
+
+            <div class="status-grid">
+                <div class="status-item">
+                    <h4>99.9%</h4>
+                    <p>Uptime Target</p>
+                </div>
+                <div class="status-item">
+                    <h4>SOC 2</h4>
+                    <p>Type I Complete</p>
+                </div>
+                <div class="status-item">
+                    <h4>24/7</h4>
+                    <p>Monitoring</p>
+                </div>
+                <div class="status-item">
+                    <h4>< 1 hour</h4>
+                    <p>Incident Response</p>
+                </div>
+            </div>
+        </section>
+
+        <section id="security">
+            <h2>Security</h2>
+            <p>Timbuktoo implements industry-leading security practices to protect customer data at every layer.</p>
+
+            <h3>Data Protection</h3>
+            <ul>
+                <li><strong>Encryption at Rest</strong>: All data encrypted using AES-256 (AWS RDS, S3)</li>
+                <li><strong>Encryption in Transit</strong>: TLS 1.2+ for all API communication</li>
+                <li><strong>Key Management</strong>: AWS KMS with automatic key rotation</li>
+                <li><strong>Database Security</strong>: PostgreSQL with row-level security and SSL connections</li>
+            </ul>
+
+            <h3>Access Control</h3>
+            <ul>
+                <li><strong>Role-Based Access Control (RBAC)</strong>: Least privilege principle enforced</li>
+                <li><strong>Multi-Factor Authentication (MFA)</strong>: Required for all production access</li>
+                <li><strong>Access Reviews</strong>: Quarterly reviews of user permissions</li>
+                <li><strong>Session Management</strong>: 30-day JWT expiration, secure token storage</li>
+            </ul>
+
+            <h3>Infrastructure Security</h3>
+            <ul>
+                <li><strong>Tenant Isolation</strong>: Logical separation of customer data</li>
+                <li><strong>Environment Separation</strong>: Dev, staging, and production environments isolated</li>
+                <li><strong>Network Security</strong>: VPC with private subnets, security groups, and NACLs</li>
+                <li><strong>Continuous Monitoring</strong>: Real-time alerts for suspicious activity (Datadog, AWS CloudWatch)</li>
+            </ul>
+
+            <h3>Vulnerability Management</h3>
+            <ul>
+                <li><strong>Dependency Scanning</strong>: Automated scanning for vulnerable dependencies (Dependabot)</li>
+                <li><strong>Penetration Testing</strong>: Annual third-party penetration tests</li>
+                <li><strong>Patch Management</strong>: Critical patches applied within 7 days</li>
+                <li><strong>Security Audits</strong>: Quarterly internal security audits</li>
+            </ul>
+        </section>
+
+        <section id="compliance">
+            <h2>Compliance</h2>
+            <p>Timbuktoo maintains compliance with industry standards and regulations to ensure data protection and security.</p>
+
+            <h3>Certifications & Standards</h3>
+            <div style="margin: 20px 0;">
+                <span class="badge">SOC 2 Type I – Complete</span>
+                <span class="badge in-progress">SOC 2 Type II – In Progress</span>
+                <span class="badge planned">ISO 27001 – Mapped</span>
+            </div>
+
+            <h3>SOC 2 Type II (In Progress)</h3>
+            <ul>
+                <li><strong>Control Period</strong>: 180 days (Day 0 → Day 180)</li>
+                <li><strong>Auditor</strong>: [TBD - Select auditor from Big 4 or boutique firm]</li>
+                <li><strong>Expected Completion</strong>: Q2 2025</li>
+                <li><strong>Trust Service Criteria</strong>: Security, Availability, Confidentiality</li>
+            </ul>
+
+            <h3>Regulatory Compliance</h3>
+            <ul>
+                <li><strong>GDPR (EU)</strong>: General Data Protection Regulation compliant
+                    <ul>
+                        <li>Data Processing Agreements (DPAs) available</li>
+                        <li>Right to access, rectify, and delete data</li>
+                        <li>Data retention policies (30-day deletion SLA)</li>
+                    </ul>
+                </li>
+                <li><strong>CCPA (California)</strong>: California Consumer Privacy Act compliant
+                    <ul>
+                        <li>User can request data deletion (Settings → Delete My Data)</li>
+                        <li>Privacy Policy discloses data collection practices</li>
+                        <li>No data sale or sharing with third parties</li>
+                    </ul>
+                </li>
+                <li><strong>COPPA (Children's Privacy)</strong>: Not applicable (app rated 18+)</li>
+            </ul>
+
+            <h3>Industry Standards</h3>
+            <ul>
+                <li><strong>ISO 27001</strong>: Information security management system mapped (certification planned for 2025)</li>
+                <li><strong>NIST Cybersecurity Framework</strong>: Aligned with Identify, Protect, Detect, Respond, Recover</li>
+                <li><strong>OWASP Top 10</strong>: Security best practices implemented (SQL injection prevention, XSS protection, etc.)</li>
+            </ul>
+        </section>
+
+        <section id="privacy">
+            <h2>Privacy</h2>
+            <p>Timbuktoo is committed to protecting user privacy and providing transparency about data practices.</p>
+
+            <h3>Data Collection</h3>
+            <ul>
+                <li><strong>Email Address</strong>: Account creation and authentication</li>
+                <li><strong>Travel Preferences</strong>: Personalization (interests, food, budget, dates)</li>
+                <li><strong>AI-Generated Itineraries</strong>: Stored for user access</li>
+                <li><strong>Usage Data</strong>: Aggregated analytics (crash reports, session duration)</li>
+            </ul>
+
+            <h3>Data NOT Collected</h3>
+            <ul>
+                <li>❌ Location data (GPS, precise location)</li>
+                <li>❌ Contacts, photos, camera, microphone</li>
+                <li>❌ Payment information (Stripe/Apple/Google handles)</li>
+                <li>❌ Device IDs or advertising identifiers (IDFA/AAID)</li>
+                <li>❌ Browsing history or search history</li>
+            </ul>
+
+            <h3>Data Usage</h3>
+            <ul>
+                <li><strong>Personalization</strong>: Travel preferences used only to generate itineraries</li>
+                <li><strong>Analytics</strong>: Aggregated usage data (no PII) for app improvement</li>
+                <li><strong>No Selling</strong>: User data is NEVER sold or shared with third parties</li>
+                <li><strong>Service Providers</strong>: AWS (infrastructure), Anthropic (AI API), Stripe (payments) are service providers, not third parties</li>
+            </ul>
+
+            <h3>Data Retention & Deletion</h3>
+            <ul>
+                <li><strong>Account Data</strong>: Retained until user requests deletion</li>
+                <li><strong>Itineraries</strong>: Retained for 2 years after last login (auto-deleted)</li>
+                <li><strong>Usage Logs</strong>: Retained for 90 days (auto-deleted)</li>
+                <li><strong>Deletion SLA</strong>: 30 days from user request (GDPR/CCPA compliant)</li>
+                <li><strong>How to Delete</strong>: Settings → Delete My Data (in-app) or email support@timbuktoo.app</li>
+            </ul>
+
+            <h3>Privacy Links</h3>
+            <ul>
+                <li><a href="https://timbuktoo.app/privacy" target="_blank">Privacy Policy</a></li>
+                <li><a href="https://timbuktoo.app/terms" target="_blank">Terms of Service</a></li>
+                <li><a href="https://timbuktoo.app/dpa" target="_blank">Data Processing Agreement (DPA)</a> (for enterprise customers)</li>
+            </ul>
+        </section>
+
+        <section id="ai">
+            <h2>AI Governance</h2>
+            <p>Timbuktoo uses artificial intelligence responsibly and transparently, with governance controls to ensure quality and safety.</p>
+
+            <h3>AI Transparency</h3>
+            <ul>
+                <li><strong>User Disclosure</strong>: AI usage disclosed during onboarding (mandatory consent checkbox)</li>
+                <li><strong>In-App Disclosure</strong>: Every AI-generated itinerary displays banner: "⚠️ This itinerary was generated by AI"</li>
+                <li><strong>Informational Only</strong>: All AI recommendations are informational and should be independently verified</li>
+                <li><strong>No Guarantees</strong>: Timbuktoo does not guarantee accuracy, availability, pricing, or safety of AI recommendations</li>
+            </ul>
+
+            <h3>Human Feedback Loops</h3>
+            <ul>
+                <li><strong>User Feedback</strong>: Users can rate itineraries as "Helpful" or "Not Helpful"</li>
+                <li><strong>Report Mechanism</strong>: Users can report issues (inaccurate, inappropriate, missing information, other)</li>
+                <li><strong>Compliance Review</strong>: All reports reviewed by compliance team within 48 hours</li>
+                <li><strong>Continuous Improvement</strong>: Feedback used to improve AI prompts and agent orchestration</li>
+            </ul>
+
+            <h3>Deterministic Orchestration</h3>
+            <ul>
+                <li><strong>Multi-Agent Workflow</strong>: 3 sequential agents (City Selection, Local Expert, Concierge)</li>
+                <li><strong>Prompt Versioning</strong>: All prompts version-controlled (Git) with changelog</li>
+                <li><strong>Workflow Versioning</strong>: Agent orchestration logic version-controlled</li>
+                <li><strong>Rollback Capability</strong>: Can roll back to previous prompt/workflow versions if quality degrades</li>
+            </ul>
+
+            <h3>AI Model & Provider</h3>
+            <ul>
+                <li><strong>Model</strong>: Anthropic Claude 3.5 Sonnet</li>
+                <li><strong>Provider</strong>: Anthropic (SOC 2 Type II certified)</li>
+                <li><strong>Data Processing</strong>: Anthropic does NOT store user data for model training</li>
+                <li><strong>Model Updates</strong>: Tested in staging before production deployment</li>
+            </ul>
+
+            <h3>Content Moderation</h3>
+            <ul>
+                <li><strong>Input Filtering</strong>: User preferences validated (no offensive content)</li>
+                <li><strong>Output Filtering</strong>: AI-generated content scanned for inappropriate language</li>
+                <li><strong>Human Review</strong>: Flagged content reviewed by compliance team</li>
+                <li><strong>Response Time</strong>: Inappropriate content reports reviewed within 1 hour (business hours)</li>
+            </ul>
+        </section>
+
+        <section id="availability">
+            <h2>Availability</h2>
+            <p>Timbuktoo maintains high availability with real-time monitoring and incident response.</p>
+
+            <h3>Uptime Commitment</h3>
+            <ul>
+                <li><strong>Target</strong>: 99.9% uptime (< 43 minutes downtime per month)</li>
+                <li><strong>Measurement</strong>: Monthly uptime percentage (excludes scheduled maintenance)</li>
+                <li><strong>Status Page</strong>: <a href="https://status.timbuktoo.app" target="_blank">status.timbuktoo.app</a> (real-time status)</li>
+            </ul>
+
+            <h3>Monitoring & Alerting</h3>
+            <ul>
+                <li><strong>Real-Time Monitoring</strong>: Datadog, AWS CloudWatch, Firebase Crashlytics</li>
+                <li><strong>Uptime Monitoring</strong>: Pingdom (external monitoring, 1-minute intervals)</li>
+                <li><strong>Alert Channels</strong>: PagerDuty (on-call rotation), Slack (engineering channel)</li>
+                <li><strong>Response Time</strong>: < 15 minutes for P0 incidents, < 1 hour for P1 incidents</li>
+            </ul>
+
+            <h3>Incident Response</h3>
+            <ul>
+                <li><strong>Incident Commander</strong>: On-call engineer (24/7 rotation)</li>
+                <li><strong>Escalation</strong>: P0 → CTO, P1 → Engineering Lead</li>
+                <li><strong>Communication</strong>: Status page updates every 30 minutes during incidents</li>
+                <li><strong>Post-Mortem</strong>: Required for P0/P1 incidents (root cause analysis, remediation plan)</li>
+            </ul>
+
+            <h3>Disaster Recovery</h3>
+            <ul>
+                <li><strong>Backups</strong>: Daily automated backups (AWS RDS, S3)</li>
+                <li><strong>Backup Retention</strong>: 30 days (daily backups), 90 days (weekly backups)</li>
+                <li><strong>Recovery Time Objective (RTO)</strong>: 4 hours (time to restore service)</li>
+                <li><strong>Recovery Point Objective (RPO)</strong>: 24 hours (maximum data loss)</li>
+                <li><strong>DR Testing</strong>: Annual disaster recovery tests (simulated outage, restore from backup)</li>
+            </ul>
+        </section>
+
+        <section id="documents">
+            <h2>Documents</h2>
+            <p>Download policies, reports, and compliance documentation.</p>
+
+            <div class="document-list">
+                <div class="document-card">
+                    <h4>Access Control Policy</h4>
+                    <p>Role-based access control, MFA requirements, and access review procedures.</p>
+                    <a href="/documents/access-control-policy.pdf" download>Download <span class="lock-icon">🔓</span></a>
+                </div>
+
+                <div class="document-card">
+                    <h4>Incident Response Policy</h4>
+                    <p>Incident classification, response procedures, and escalation protocols.</p>
+                    <a href="/documents/incident-response-policy.pdf" download>Download <span class="lock-icon">🔓</span></a>
+                </div>
+
+                <div class="document-card">
+                    <h4>Disaster Recovery Policy</h4>
+                    <p>Backup procedures, RTO/RPO targets, and DR testing schedule.</p>
+                    <a href="/documents/disaster-recovery-policy.pdf" download>Download <span class="lock-icon">🔓</span></a>
+                </div>
+
+                <div class="document-card">
+                    <h4>Change Management Policy</h4>
+                    <p>Change approval process, rollback procedures, and deployment guidelines.</p>
+                    <a href="/documents/change-management-policy.pdf" download>Download <span class="lock-icon">🔓</span></a>
+                </div>
+
+                <div class="document-card">
+                    <h4>Data Processing Agreement (DPA)</h4>
+                    <p>GDPR-compliant DPA for enterprise customers (EU).</p>
+                    <a href="/documents/dpa.pdf" download>Download <span class="lock-icon">🔓</span></a>
+                </div>
+
+                <div class="document-card">
+                    <h4>SOC 2 Type I Report</h4>
+                    <p>Independent audit report (under NDA - enterprise customers only).</p>
+                    <a href="/documents/soc2-type1-request" target="_blank">Request Access <span class="lock-icon">🔒</span></a>
+                </div>
+
+                <div class="document-card">
+                    <h4>SOC 2 Type II Report</h4>
+                    <p>In progress - expected completion Q2 2025.</p>
+                    <a href="#" style="background-color: #ccc; cursor: not-allowed;">Coming Soon</a>
+                </div>
+
+                <div class="document-card">
+                    <h4>Penetration Test Report</h4>
+                    <p>Annual penetration test results (under NDA - enterprise customers only).</p>
+                    <a href="/documents/pentest-request" target="_blank">Request Access <span class="lock-icon">🔒</span></a>
+                </div>
+            </div>
+
+            <p style="margin-top: 30px; font-size: 0.9rem; color: #666;">
+                <strong>Note:</strong> Documents marked with 🔒 require NDA and are available to enterprise customers only.
+                Contact <a href="mailto:security@timbuktoo.app">security@timbuktoo.app</a> to request access.
+            </p>
+        </section>
+    </main>
+
+    <footer>
+        <p>&copy; 2024 Timbuktoo Inc. All rights reserved.</p>
+        <p style="margin-top: 10px;">
+            <a href="https://timbuktoo.app">Home</a> |
+            <a href="https://timbuktoo.app/privacy">Privacy</a> |
+            <a href="https://timbuktoo.app/terms">Terms</a> |
+            <a href="mailto:security@timbuktoo.app">Contact Security</a>
+        </p>
+        <p style="margin-top: 10px; font-size: 0.9rem;">
+            Last updated: 2024-07-16 | <a href="https://status.timbuktoo.app">System Status</a>
+        </p>
+    </footer>
+</body>
+</html>

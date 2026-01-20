@@ -1,0 +1,160 @@
+{
+  "app": {
+    "title": "Timbuktoo – AI Travel Planner",
+    "shortDescription": "AI-powered travel itineraries, personalized to you.",
+    "fullDescription": "Plan trips faster with Timbuktoo, an AI-powered travel concierge that creates personalized itineraries based on your preferences.\n\nFEATURES\n• AI-generated travel itineraries\n• Destination recommendations\n• Local food and activity suggestions\n• Weather-aware planning\n• Built-in feedback tools\n\nAI DISCLOSURE\nThis app uses artificial intelligence to generate travel recommendations. AI-generated content may be inaccurate or incomplete and is provided for informational purposes only.\n\nDATA SAFETY\nYour data is encrypted and used only to personalize your experience. You can request deletion at any time.",
+    "primaryLanguage": "en-US",
+    "packageName": "ai.timbuktoo.mobile",
+    "version": "1.0.0",
+    "versionCode": 1
+  },
+  "contact": {
+    "website": "https://timbuktoo.app",
+    "supportEmail": "support@timbuktoo.app",
+    "privacyPolicyUrl": "https://timbuktoo.app/privacy",
+    "termsOfServiceUrl": "https://timbuktoo.app/terms"
+  },
+  "category": {
+    "primary": "Travel & Local",
+    "tags": ["travel planner", "ai travel", "itinerary planner", "trip planning", "vacation planner"]
+  },
+  "contentRating": {
+    "esrb": "Everyone",
+    "pegi": "3",
+    "usk": "0",
+    "explanation": "No objectionable content. Travel planning app with AI-generated recommendations."
+  },
+  "monetization": {
+    "freeTier": {
+      "enabled": true,
+      "features": ["3 itineraries per month", "City recommendations", "Feedback tools", "Settings"]
+    },
+    "subscriptions": [
+      {
+        "productId": "pro_monthly",
+        "name": "Pro Monthly",
+        "billingPeriod": "P1M",
+        "priceUsd": 9.99,
+        "currencyCode": "USD",
+        "freeTrial": {
+          "enabled": true,
+          "period": "P7D"
+        },
+        "features": ["Unlimited itineraries", "Priority support", "All features"]
+      },
+      {
+        "productId": "pro_annual",
+        "name": "Pro Annual",
+        "billingPeriod": "P1Y",
+        "priceUsd": 79.99,
+        "currencyCode": "USD",
+        "freeTrial": {
+          "enabled": true,
+          "period": "P7D"
+        },
+        "features": ["Unlimited itineraries", "Priority support", "All features", "Save 33%"]
+      }
+    ]
+  },
+  "screenshots": {
+    "phone": {
+      "dimensions": "1080x1920",
+      "minimum": 4,
+      "maximum": 8,
+      "files": [
+        {
+          "order": 1,
+          "name": "android_screenshot_01_onboarding_1080x1920.png",
+          "caption": "Your AI Travel Concierge - Personalized travel plans powered by AI.",
+          "critical": "MUST show AI disclosure checkbox"
+        },
+        {
+          "order": 2,
+          "name": "android_screenshot_02_preferences_1080x1920.png",
+          "caption": "Trips, Your Way - Food, pace, budget, and experiences tailored to you."
+        },
+        {
+          "order": 3,
+          "name": "android_screenshot_03_city_selection_1080x1920.png",
+          "caption": "Smart Destination Picks - AI suggests cities based on what you love."
+        },
+        {
+          "order": 4,
+          "name": "android_screenshot_04_itinerary_1080x1920.png",
+          "caption": "Day-by-Day Clarity - Clear plans for every day of your trip.",
+          "critical": "MUST show AI banner"
+        },
+        {
+          "order": 5,
+          "name": "android_screenshot_05_feedback_1080x1920.png",
+          "caption": "AI You Can Trust - Clear disclosures and easy feedback on AI content."
+        }
+      ]
+    },
+    "tablet": {
+      "dimensions": "1536x2048",
+      "minimum": 0,
+      "note": "Optional - app is optimized for phone"
+    }
+  },
+  "dataSafety": {
+    "dataCollected": [
+      {
+        "category": "Personal info",
+        "types": [
+          {
+            "type": "Email address",
+            "purpose": "Account management",
+            "sharedWithThirdParties": false,
+            "optional": false
+          }
+        ]
+      },
+      {
+        "category": "App activity",
+        "types": [
+          {
+            "type": "App interactions",
+            "purpose": "Analytics, App functionality",
+            "sharedWithThirdParties": false,
+            "optional": false
+          }
+        ]
+      },
+      {
+        "category": "App info and performance",
+        "types": [
+          {
+            "type": "Crash logs",
+            "purpose": "App functionality",
+            "sharedWithThirdParties": false,
+            "optional": false
+          }
+        ]
+      }
+    ],
+    "securityPractices": {
+      "dataEncryptedInTransit": true,
+      "dataEncryptedAtRest": true,
+      "userCanRequestDataDeletion": true,
+      "dataUsedForTracking": false
+    }
+  },
+  "testing": {
+    "internalTesting": {
+      "minimumDuration": "P14D",
+      "minimumTesters": 20,
+      "demoAccount": {
+        "email": "reviewer@timbuktoo.app",
+        "password": "ReviewTest2024!"
+      }
+    }
+  },
+  "metadata": {
+    "createdAt": "2024-07-16",
+    "lastUpdated": "2024-07-16",
+    "version": "1.0.0",
+    "purpose": "Google Play Console metadata for Timbuktoo Mobile Android app",
+    "usage": "This JSON mirrors Google Play Console fields and can be used for internal tooling, CI/CD, or manual entry validation."
+  }
+}

@@ -1,0 +1,406 @@
+{
+  "version": "1.0.0",
+  "lastUpdated": "2024-07-16",
+  "initialMarkets": ["en-US", "es-419", "fr-FR", "de-DE", "pt-BR"],
+  "governanceRules": [
+    "AI disclosure meaning must remain identical across all languages",
+    "Legal text is not culturally rewritten - only translated for accuracy",
+    "All translations reviewed by native speakers and legal counsel"
+  ],
+  "localizations": {
+    "en-US": {
+      "displayName": "English (United States)",
+      "isSource": true,
+      "appStore": {
+        "ios": {
+          "appName": "Timbuktoo – AI Travel Concierge",
+          "subtitle": "Personalized trip itineraries",
+          "keywords": "travel planner,ai travel,itinerary planner,vacation planner,trip planner,travel guide"
+        },
+        "android": {
+          "appName": "Timbuktoo – AI Travel Planner",
+          "shortDescription": "AI-powered travel itineraries, personalized to you.",
+          "fullDescription": "Plan trips faster with Timbuktoo, an AI-powered travel concierge that creates personalized itineraries based on your preferences.\n\nFEATURES\n• AI-generated travel itineraries\n• Destination recommendations\n• Local food and activity suggestions\n• Weather-aware planning\n• Built-in feedback tools\n\nAI DISCLOSURE\nThis app uses artificial intelligence to generate travel recommendations. AI-generated content may be inaccurate or incomplete and is provided for informational purposes only.\n\nDATA SAFETY\nYour data is encrypted and used only to personalize your experience. You can request deletion at any time."
+        }
+      },
+      "screenshots": {
+        "captions": [
+          {
+            "order": 1,
+            "overlay": "Your AI Travel Concierge",
+            "caption": "Personalized travel plans powered by AI."
+          },
+          {
+            "order": 2,
+            "overlay": "Trips, Your Way",
+            "caption": "Food, pace, budget, and experiences tailored to you."
+          },
+          {
+            "order": 3,
+            "overlay": "Smart Destination Picks",
+            "caption": "AI suggests cities based on what you love."
+          },
+          {
+            "order": 4,
+            "overlay": "Day-by-Day Clarity",
+            "caption": "Clear plans for every day of your trip."
+          },
+          {
+            "order": 5,
+            "overlay": "AI You Can Trust",
+            "caption": "Clear disclosures and easy feedback on AI content."
+          }
+        ]
+      },
+      "inApp": {
+        "onboarding": {
+          "welcome": {
+            "title": "Welcome to Timbuktoo",
+            "body": "Your AI-powered travel concierge for personalized trip planning."
+          },
+          "aiDisclosure": {
+            "title": "About AI Recommendations",
+            "body": "Timbuktoo uses artificial intelligence to generate travel suggestions.\n\nAI-generated content may be inaccurate or incomplete. Verify critical details before booking.",
+            "checkbox": "I understand that itineraries are AI-generated",
+            "cta": "I Understand"
+          },
+          "dataUse": {
+            "title": "Your Privacy Matters",
+            "body": "We collect your travel preferences to personalize recommendations. Your data is never sold or shared."
+          }
+        },
+        "paywall": {
+          "headline": "Unlock Unlimited Travel Planning",
+          "subheadline": "Create unlimited AI-generated itineraries tailored to you.",
+          "cta": "Start Free Trial"
+        }
+      }
+    },
+    "es-419": {
+      "displayName": "Spanish (Latin America)",
+      "isSource": false,
+      "appStore": {
+        "ios": {
+          "appName": "Timbuktoo – Asistente de Viajes con IA",
+          "subtitle": "Itinerarios de viaje personalizados",
+          "keywords": "planificador de viajes,viajes con ia,planificador de itinerarios,planificador de vacaciones,guía de viajes"
+        },
+        "android": {
+          "appName": "Timbuktoo – Planificador de Viajes con IA",
+          "shortDescription": "Itinerarios de viaje personalizados con IA.",
+          "fullDescription": "Planifica viajes más rápido con Timbuktoo, un asistente de viajes con IA que crea itinerarios personalizados basados en tus preferencias.\n\nCARACTERÍSTICAS\n• Itinerarios de viaje generados por IA\n• Recomendaciones de destinos\n• Sugerencias de comida y actividades locales\n• Planificación basada en el clima\n• Herramientas de comentarios integradas\n\nDIVULGACIÓN DE IA\nEsta aplicación utiliza inteligencia artificial para generar recomendaciones de viaje. El contenido generado por IA puede ser inexacto o incompleto y se proporciona únicamente con fines informativos.\n\nSEGURIDAD DE DATOS\nTus datos están encriptados y se utilizan únicamente para personalizar tu experiencia. Puedes solicitar la eliminación en cualquier momento."
+        }
+      },
+      "screenshots": {
+        "captions": [
+          {
+            "order": 1,
+            "overlay": "Tu Asistente de Viajes con IA",
+            "caption": "Planes de viaje personalizados impulsados por IA."
+          },
+          {
+            "order": 2,
+            "overlay": "Viajes a Tu Manera",
+            "caption": "Comida, ritmo, presupuesto y experiencias adaptadas a ti."
+          },
+          {
+            "order": 3,
+            "overlay": "Selección Inteligente de Destinos",
+            "caption": "La IA sugiere ciudades basadas en lo que amas."
+          },
+          {
+            "order": 4,
+            "overlay": "Claridad Día a Día",
+            "caption": "Planes claros para cada día de tu viaje."
+          },
+          {
+            "order": 5,
+            "overlay": "IA en la que Puedes Confiar",
+            "caption": "Divulgaciones claras y comentarios fáciles sobre contenido de IA."
+          }
+        ]
+      },
+      "inApp": {
+        "onboarding": {
+          "welcome": {
+            "title": "Bienvenido a Timbuktoo",
+            "body": "Tu asistente de viajes con IA para planificación personalizada."
+          },
+          "aiDisclosure": {
+            "title": "Acerca de las Recomendaciones de IA",
+            "body": "Timbuktoo usa inteligencia artificial para generar sugerencias de viaje.\n\nEl contenido generado por IA puede ser inexacto o incompleto. Verifica los detalles críticos antes de reservar.",
+            "checkbox": "Entiendo que los itinerarios son generados por IA",
+            "cta": "Entiendo"
+          },
+          "dataUse": {
+            "title": "Tu Privacidad Importa",
+            "body": "Recopilamos tus preferencias de viaje para personalizar recomendaciones. Tus datos nunca se venden ni comparten."
+          }
+        },
+        "paywall": {
+          "headline": "Desbloquea Planificación de Viajes Ilimitada",
+          "subheadline": "Crea itinerarios ilimitados generados por IA y adaptados a ti.",
+          "cta": "Comenzar Prueba Gratuita"
+        }
+      }
+    },
+    "fr-FR": {
+      "displayName": "French (France)",
+      "isSource": false,
+      "appStore": {
+        "ios": {
+          "appName": "Timbuktoo – Concierge de Voyage IA",
+          "subtitle": "Itinéraires de voyage personnalisés",
+          "keywords": "planificateur de voyage,voyage ia,planificateur d'itinéraire,planificateur de vacances,guide de voyage"
+        },
+        "android": {
+          "appName": "Timbuktoo – Planificateur de Voyage IA",
+          "shortDescription": "Itinéraires de voyage alimentés par l'IA, personnalisés pour vous.",
+          "fullDescription": "Planifiez des voyages plus rapidement avec Timbuktoo, un concierge de voyage alimenté par l'IA qui crée des itinéraires personnalisés basés sur vos préférences.\n\nCARACTÉRISTIQUES\n• Itinéraires de voyage générés par l'IA\n• Recommandations de destinations\n• Suggestions de nourriture et d'activités locales\n• Planification tenant compte de la météo\n• Outils de feedback intégrés\n\nDIVULGATION IA\nCette application utilise l'intelligence artificielle pour générer des recommandations de voyage. Le contenu généré par l'IA peut être inexact ou incomplet et est fourni à titre informatif uniquement.\n\nSÉCURITÉ DES DONNÉES\nVos données sont cryptées et utilisées uniquement pour personnaliser votre expérience. Vous pouvez demander la suppression à tout moment."
+        }
+      },
+      "screenshots": {
+        "captions": [
+          {
+            "order": 1,
+            "overlay": "Votre Concierge de Voyage IA",
+            "caption": "Plans de voyage personnalisés alimentés par l'IA."
+          },
+          {
+            "order": 2,
+            "overlay": "Voyages à Votre Façon",
+            "caption": "Nourriture, rythme, budget et expériences adaptés à vous."
+          },
+          {
+            "order": 3,
+            "overlay": "Choix de Destinations Intelligents",
+            "caption": "L'IA suggère des villes basées sur ce que vous aimez."
+          },
+          {
+            "order": 4,
+            "overlay": "Clarté Jour par Jour",
+            "caption": "Plans clairs pour chaque jour de votre voyage."
+          },
+          {
+            "order": 5,
+            "overlay": "IA en qui Vous Pouvez Avoir Confiance",
+            "caption": "Divulgations claires et commentaires faciles sur le contenu IA."
+          }
+        ]
+      },
+      "inApp": {
+        "onboarding": {
+          "welcome": {
+            "title": "Bienvenue sur Timbuktoo",
+            "body": "Votre concierge de voyage IA pour une planification personnalisée."
+          },
+          "aiDisclosure": {
+            "title": "À Propos des Recommandations IA",
+            "body": "Timbuktoo utilise l'intelligence artificielle pour générer des suggestions de voyage.\n\nLe contenu généré par IA peut être inexact ou incomplet. Vérifiez les détails critiques avant de réserver.",
+            "checkbox": "Je comprends que les itinéraires sont générés par IA",
+            "cta": "Je Comprends"
+          },
+          "dataUse": {
+            "title": "Votre Confidentialité Compte",
+            "body": "Nous collectons vos préférences de voyage pour personnaliser les recommandations. Vos données ne sont jamais vendues ni partagées."
+          }
+        },
+        "paywall": {
+          "headline": "Débloquez la Planification de Voyages Illimitée",
+          "subheadline": "Créez des itinéraires illimités générés par l'IA et adaptés à vous.",
+          "cta": "Commencer l'Essai Gratuit"
+        }
+      }
+    },
+    "de-DE": {
+      "displayName": "German (Germany)",
+      "isSource": false,
+      "appStore": {
+        "ios": {
+          "appName": "Timbuktoo – KI-Reise-Concierge",
+          "subtitle": "Personalisierte Reiserouten",
+          "keywords": "reiseplaner,ki reise,reiseroute planer,urlaubsplaner,reiseführer"
+        },
+        "android": {
+          "appName": "Timbuktoo – KI-Reiseplaner",
+          "shortDescription": "KI-gestützte Reiserouten, auf Sie zugeschnitten.",
+          "fullDescription": "Planen Sie Reisen schneller mit Timbuktoo, einem KI-gestützten Reise-Concierge, der personalisierte Reiserouten basierend auf Ihren Präferenzen erstellt.\n\nFUNKTIONEN\n• KI-generierte Reiserouten\n• Zielempfehlungen\n• Lokale Essen- und Aktivitätsvorschläge\n• Wetterbasierte Planung\n• Integrierte Feedback-Tools\n\nKI-OFFENLEGUNG\nDiese App verwendet künstliche Intelligenz, um Reiseempfehlungen zu generieren. KI-generierte Inhalte können ungenau oder unvollständig sein und werden nur zu Informationszwecken bereitgestellt.\n\nDATENSICHERHEIT\nIhre Daten sind verschlüsselt und werden nur zur Personalisierung Ihrer Erfahrung verwendet. Sie können jederzeit die Löschung beantragen."
+        }
+      },
+      "screenshots": {
+        "captions": [
+          {
+            "order": 1,
+            "overlay": "Ihr KI-Reise-Concierge",
+            "caption": "Personalisierte Reisepläne durch KI."
+          },
+          {
+            "order": 2,
+            "overlay": "Reisen nach Ihrem Geschmack",
+            "caption": "Essen, Tempo, Budget und Erlebnisse auf Sie zugeschnitten."
+          },
+          {
+            "order": 3,
+            "overlay": "Intelligente Zielauswahl",
+            "caption": "Die KI schlägt Städte basierend auf dem vor, was Sie lieben."
+          },
+          {
+            "order": 4,
+            "overlay": "Tag-für-Tag-Klarheit",
+            "caption": "Klare Pläne für jeden Tag Ihrer Reise."
+          },
+          {
+            "order": 5,
+            "overlay": "KI, der Sie Vertrauen Können",
+            "caption": "Klare Offenlegungen und einfaches Feedback zu KI-Inhalten."
+          }
+        ]
+      },
+      "inApp": {
+        "onboarding": {
+          "welcome": {
+            "title": "Willkommen bei Timbuktoo",
+            "body": "Ihr KI-gestützter Reise-Concierge für personalisierte Reiseplanung."
+          },
+          "aiDisclosure": {
+            "title": "Über KI-Empfehlungen",
+            "body": "Timbuktoo verwendet künstliche Intelligenz, um Reisevorschläge zu generieren.\n\nKI-generierte Inhalte können ungenau oder unvollständig sein. Überprüfen Sie kritische Details vor der Buchung.",
+            "checkbox": "Ich verstehe, dass Reiserouten von KI generiert werden",
+            "cta": "Ich Verstehe"
+          },
+          "dataUse": {
+            "title": "Ihre Privatsphäre Zählt",
+            "body": "Wir sammeln Ihre Reisepräferenzen, um Empfehlungen zu personalisieren. Ihre Daten werden niemals verkauft oder geteilt."
+          }
+        },
+        "paywall": {
+          "headline": "Unbegrenzte Reiseplanung Freischalten",
+          "subheadline": "Erstellen Sie unbegrenzt KI-generierte, auf Sie zugeschnittene Reisepläne.",
+          "cta": "Kostenlose Testversion Starten"
+        }
+      }
+    },
+    "pt-BR": {
+      "displayName": "Portuguese (Brazil)",
+      "isSource": false,
+      "appStore": {
+        "ios": {
+          "appName": "Timbuktoo – Concierge de Viagem IA",
+          "subtitle": "Roteiros de viagem personalizados",
+          "keywords": "planejador de viagem,viagem ia,planejador de roteiro,planejador de férias,guia de viagem"
+        },
+        "android": {
+          "appName": "Timbuktoo – Planejador de Viagem IA",
+          "shortDescription": "Roteiros de viagem com IA, personalizados para você.",
+          "fullDescription": "Planeje viagens mais rápido com Timbuktoo, um concierge de viagem com IA que cria roteiros personalizados com base em suas preferências.\n\nRECURSOS\n• Roteiros de viagem gerados por IA\n• Recomendações de destinos\n• Sugestões de comida e atividades locais\n• Planejamento baseado no clima\n• Ferramentas de feedback integradas\n\nDIVULGAÇÃO DE IA\nEste aplicativo usa inteligência artificial para gerar recomendações de viagem. O conteúdo gerado por IA pode ser impreciso ou incompleto e é fornecido apenas para fins informativos.\n\nSEGURANÇA DE DADOS\nSeus dados são criptografados e usados apenas para personalizar sua experiência. Você pode solicitar a exclusão a qualquer momento."
+        }
+      },
+      "screenshots": {
+        "captions": [
+          {
+            "order": 1,
+            "overlay": "Seu Concierge de Viagem com IA",
+            "caption": "Planos de viagem personalizados com IA."
+          },
+          {
+            "order": 2,
+            "overlay": "Viagens do Seu Jeito",
+            "caption": "Comida, ritmo, orçamento e experiências adaptadas a você."
+          },
+          {
+            "order": 3,
+            "overlay": "Escolha Inteligente de Destinos",
+            "caption": "A IA sugere cidades com base no que você ama."
+          },
+          {
+            "order": 4,
+            "overlay": "Clareza Dia a Dia",
+            "caption": "Planos claros para cada dia da sua viagem."
+          },
+          {
+            "order": 5,
+            "overlay": "IA em Quem Você Pode Confiar",
+            "caption": "Divulgações claras e feedback fácil sobre conteúdo de IA."
+          }
+        ]
+      },
+      "inApp": {
+        "onboarding": {
+          "welcome": {
+            "title": "Bem-vindo ao Timbuktoo",
+            "body": "Seu concierge de viagem com IA para planejamento personalizado."
+          },
+          "aiDisclosure": {
+            "title": "Sobre Recomendações de IA",
+            "body": "Timbuktoo usa inteligência artificial para gerar sugestões de viagem.\n\nO conteúdo gerado por IA pode ser impreciso ou incompleto. Verifique detalhes críticos antes de reservar.",
+            "checkbox": "Entendo que os roteiros são gerados por IA",
+            "cta": "Entendo"
+          },
+          "dataUse": {
+            "title": "Sua Privacidade Importa",
+            "body": "Coletamos suas preferências de viagem para personalizar recomendações. Seus dados nunca são vendidos ou compartilhados."
+          }
+        },
+        "paywall": {
+          "headline": "Desbloqueie Planejamento de Viagem Ilimitado",
+          "subheadline": "Crie roteiros ilimitados gerados por IA e adaptados a você.",
+          "cta": "Iniciar Teste Gratuito"
+        }
+      }
+    }
+  },
+  "rolloutPhases": {
+    "phase1": {
+      "name": "Store Listings",
+      "markets": ["es-419", "fr-FR", "de-DE"],
+      "scope": ["App name", "Short description", "Full description", "Screenshot captions"],
+      "timeline": "Week 1-2",
+      "owner": "Product + Marketing"
+    },
+    "phase2": {
+      "name": "Onboarding + Disclosures",
+      "markets": ["es-419", "fr-FR", "de-DE"],
+      "scope": ["Welcome screen", "AI disclosure", "Data use", "Permissions"],
+      "timeline": "Week 3-4",
+      "owner": "Product + Engineering + Legal"
+    },
+    "phase3": {
+      "name": "Paywall Copy",
+      "markets": ["es-419", "fr-FR", "de-DE"],
+      "scope": ["Paywall headline", "Subheadline", "Benefits", "CTA", "Legal footer"],
+      "timeline": "Week 5-6",
+      "owner": "Product + Growth + Legal"
+    },
+    "phase4": {
+      "name": "Support Articles",
+      "markets": ["es-419", "fr-FR", "de-DE"],
+      "scope": ["Help center", "FAQs", "Privacy Policy", "Terms of Service"],
+      "timeline": "Week 7-8",
+      "owner": "Product + Support + Legal"
+    }
+  },
+  "qa": {
+    "reviewers": {
+      "es-419": "Native Spanish speaker (LATAM) + Legal counsel",
+      "fr-FR": "Native French speaker (France) + Legal counsel",
+      "de-DE": "Native German speaker (Germany) + Legal counsel",
+      "pt-BR": "Native Portuguese speaker (Brazil) + Legal counsel"
+    },
+    "checklist": [
+      "AI disclosure meaning identical to en-US",
+      "Legal copy reviewed by local counsel",
+      "App Store character limits respected",
+      "Screenshots updated with localized overlays",
+      "In-app copy tested on devices (no truncation)",
+      "Date/time/currency formats localized",
+      "Privacy Policy and Terms of Service translated"
+    ]
+  },
+  "metadata": {
+    "createdAt": "2024-07-16",
+    "lastUpdated": "2024-07-16",
+    "version": "1.0.0",
+    "purpose": "Store localization packs for initial markets (Top 5)",
+    "usage": "Use for App Store Connect and Google Play Console localization, in-app copy, and marketing materials."
+  }
+}
