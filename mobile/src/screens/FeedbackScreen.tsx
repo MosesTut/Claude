@@ -4,6 +4,7 @@ import {
   StyleSheet,
   ScrollView,
   Alert,
+  SafeAreaView,
 } from 'react-native';
 import { Button, TextInput, RadioButton, Text } from 'react-native-paper';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -55,40 +56,25 @@ export default function FeedbackScreen({
   };
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.scrollContent}>
-      <Text variant="headlineMedium" style={styles.title}>
-        Report an Issue
-      </Text>
-
-      <Text variant="bodyMedium" style={styles.subtitle}>
-        Help us improve by reporting issues with AI-generated content
-      </Text>
-
-      <View style={styles.section}>
-        <Text variant="titleMedium" style={styles.sectionTitle}>
-          What's the issue?
+    <SafeAreaView style={styles.container}>
+      <ScrollView contentContainerStyle={styles.scrollContent}>
+        <Text variant="headlineMedium" style={styles.title}>
+          Report an Issue
         </Text>
 
-        <RadioButton.Group
-          onValueChange={value => setFeedbackType(value as FeedbackType)}
-          value={feedbackType}
-        >
-          <RadioButton.Item label="Inaccurate information" value="inaccurate" />
-          <RadioButton.Item label="Inappropriate content" value="inappropriate" />
-          <RadioButton.Item label="Missing information" value="missing_information" />
-          <RadioButton.Item label="Other" value="other" />
-        </RadioButton.Group>
-      </View>
+        <Text variant="bodyMedium" style={styles.subtitle}>
+          Help us improve by reporting issues with AI-generated content
+        </Text>
 
-      <View style={styles.section}>
-          <Text style={styles.sectionTitle}>⚠️ Report an Issue</Text>
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>⚠️ What's the issue?</Text>
           <Text style={styles.sectionSubtitle}>
             Required for AI-generated content apps
           </Text>
 
           <RadioButton.Group
-            onValueChange={(value) => setReportType(value)}
-            value={reportType}
+            onValueChange={(value) => setFeedbackType(value as FeedbackType)}
+            value={feedbackType}
           >
             <View style={styles.radioItem}>
               <RadioButton value="inaccurate" />
@@ -99,7 +85,7 @@ export default function FeedbackScreen({
               <Text style={styles.radioLabel}>Inappropriate content</Text>
             </View>
             <View style={styles.radioItem}>
-              <RadioButton value="missing" />
+              <RadioButton value="missing_information" />
               <Text style={styles.radioLabel}>
                 Missing key information
               </Text>
@@ -129,7 +115,7 @@ export default function FeedbackScreen({
             mode="contained"
             onPress={handleSubmit}
             loading={loading}
-            disabled={loading || (!rating && !reportType)}
+            disabled={loading}
             style={styles.submitButton}
             contentStyle={styles.buttonContent}
           >
