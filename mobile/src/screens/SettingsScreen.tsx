@@ -1,12 +1,13 @@
 import React, { useState } from 'react';
 import {
   View,
+  SafeAreaView,
   StyleSheet,
   ScrollView,
   Alert,
   Linking,
 } from 'react-native';
-import { List, Button, Dialog, Portal, Text } from 'react-native-paper';
+import { List, Button, Dialog, Portal, Text, Paragraph } from 'react-native-paper';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../App';
 import apiClient, { clearAuthToken } from '../services/api';
