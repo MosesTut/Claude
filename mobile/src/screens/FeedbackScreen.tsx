@@ -13,6 +13,8 @@ import { RootStackParamList } from '../../App';
 import apiClient from '../services/api';
 import { ENDPOINTS } from '../config/api';
 import { FeedbackType } from '../types';
+import { formatErrorAlert } from '../utils/errors';
+import { validateComments } from '../utils/validation';
 
 type FeedbackScreenProps = {
   navigation: NativeStackNavigationProp<RootStackParamList, 'Feedback'>;
@@ -29,6 +31,15 @@ export default function FeedbackScreen({
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async () => {
+    // Validate comments if provided
+    if (comments) {
+      const validation = validateComments(comments);
+      if (!validation.isValid) {
+        Alert.alert('Validation Error', validation.error || 'Please check your comments');
+        return;
+      }
+    }
+
     setLoading(true);
 
     try {
@@ -49,7 +60,8 @@ export default function FeedbackScreen({
         ]
       );
     } catch (error: any) {
-      Alert.alert('Error', error.response?.data?.detail || 'Failed to submit feedback');
+      const { title, message } = formatErrorAlert(error);
+      Alert.alert(title, message);
     } finally {
       setLoading(false);
     }

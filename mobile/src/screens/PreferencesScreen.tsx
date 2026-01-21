@@ -6,6 +6,8 @@ import { RootStackParamList } from '../../App';
 import apiClient from '../services/api';
 import { ENDPOINTS } from '../config/api';
 import { Preferences } from '../types';
+import { formatErrorAlert } from '../utils/errors';
+import { validatePreferencesForm } from '../utils/validation';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Preferences'>;
 
@@ -66,13 +68,17 @@ export default function PreferencesScreen({ navigation }: Props) {
   };
 
   const handleSaveAndContinue = async () => {
-    if (interests.length === 0) {
-      Alert.alert('Missing Info', 'Please select at least one interest');
-      return;
-    }
+    // Validate form before submission
+    const validation = validatePreferencesForm({
+      interests,
+      foodPreferences,
+      tripLength,
+      budget,
+      pace,
+    });
 
-    if (!tripLength || parseInt(tripLength) < 1 || parseInt(tripLength) > 30) {
-      Alert.alert('Invalid Trip Length', 'Please enter a trip length between 1-30 days');
+    if (!validation.isValid) {
+      Alert.alert('Validation Error', validation.error || 'Please check your input');
       return;
     }
 
@@ -92,7 +98,8 @@ export default function PreferencesScreen({ navigation }: Props) {
       // Navigate to City Recommendations
       navigation.navigate('CityRecommendation');
     } catch (error: any) {
-      Alert.alert('Error', error.response?.data?.detail || 'Failed to save preferences');
+      const { title, message } = formatErrorAlert(error);
+      Alert.alert(title, message);
     } finally {
       setLoading(false);
     }

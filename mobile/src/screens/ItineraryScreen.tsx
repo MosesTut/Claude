@@ -6,6 +6,8 @@ import { RootStackParamList } from '../../App';
 import apiClient from '../services/api';
 import { ENDPOINTS } from '../config/api';
 import { Itinerary, DailyPlan } from '../types';
+import { formatErrorAlert } from '../utils/errors';
+import { ItineraryDaySkeleton } from '../components/LoadingStates';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Itinerary'>;
 
@@ -25,8 +27,10 @@ export default function ItineraryScreen({ navigation, route }: Props) {
       );
       setItinerary(response.data);
     } catch (error: any) {
-      Alert.alert('Error', error.response?.data?.detail || 'Failed to load itinerary');
-      navigation.goBack();
+      const { title, message } = formatErrorAlert(error);
+      Alert.alert(title, message, [
+        { text: 'OK', onPress: () => navigation.goBack() }
+      ]);
     } finally {
       setLoading(false);
     }
@@ -46,12 +50,17 @@ export default function ItineraryScreen({ navigation, route }: Props) {
 
   if (loading) {
     return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#8B5CF6" />
-        <Text variant="bodyLarge" style={styles.loadingText}>
-          Loading your itinerary...
-        </Text>
-      </View>
+      <ScrollView style={styles.container}>
+        <View style={styles.header}>
+          <ActivityIndicator size="small" color="#8B5CF6" style={{ marginBottom: 16 }} />
+          <Text variant="bodyLarge" style={styles.loadingText}>
+            Loading your itinerary...
+          </Text>
+        </View>
+        <ItineraryDaySkeleton />
+        <ItineraryDaySkeleton />
+        <ItineraryDaySkeleton />
+      </ScrollView>
     );
   }
 

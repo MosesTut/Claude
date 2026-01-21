@@ -6,6 +6,8 @@ import { RootStackParamList } from '../../App';
 import apiClient from '../services/api';
 import { ENDPOINTS } from '../config/api';
 import { CityRecommendation } from '../types';
+import { formatErrorAlert } from '../utils/errors';
+import { CityCardSkeleton, AIGenerationProgress } from '../components/LoadingStates';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'CityRecommendation'>;
 
@@ -26,7 +28,8 @@ export default function CityRecommendationScreen({ navigation }: Props) {
       );
       setCities(response.data.cities);
     } catch (error: any) {
-      Alert.alert('Error', error.response?.data?.detail || 'Failed to load recommendations');
+      const { title, message } = formatErrorAlert(error);
+      Alert.alert(title, message);
     } finally {
       setLoading(false);
     }
@@ -77,12 +80,26 @@ export default function CityRecommendationScreen({ navigation }: Props) {
 
   if (loading) {
     return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#8B5CF6" />
-        <Text variant="bodyLarge" style={styles.loadingText}>
-          Finding perfect cities for you...
+      <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+        <Text variant="headlineMedium" style={styles.title}>
+          Recommended Cities
         </Text>
-      </View>
+        <Text variant="bodyMedium" style={styles.subtitle}>
+          Finding perfect destinations for you...
+        </Text>
+        <CityCardSkeleton />
+        <CityCardSkeleton />
+        <CityCardSkeleton />
+      </ScrollView>
+    );
+  }
+
+  if (generating) {
+    return (
+      <AIGenerationProgress
+        stage="generating"
+        estimatedTime={45}
+      />
     );
   }
 

@@ -14,6 +14,8 @@ import { RootStackParamList } from '../../App';
 import apiClient, { setAuthToken } from '../services/api';
 import { ENDPOINTS } from '../config/api';
 import { AuthResponse } from '../types';
+import { formatErrorAlert } from '../utils/errors';
+import { validateSignupForm, validateLoginForm } from '../utils/validation';
 
 type AuthScreenProps = {
   navigation: NativeStackNavigationProp<RootStackParamList, 'Auth'>;
@@ -28,8 +30,13 @@ export default function AuthScreen({ navigation, route }: AuthScreenProps) {
   const [loading, setLoading] = useState(false);
 
   const handleAuth = async () => {
-    if (!email || !password) {
-      Alert.alert('Error', 'Please fill in all fields');
+    // Validate form before submission
+    const validation = mode === 'signup'
+      ? validateSignupForm({ email, password, confirmPassword: password })
+      : validateLoginForm({ email, password });
+
+    if (!validation.isValid) {
+      Alert.alert('Validation Error', validation.error || 'Please check your input');
       return;
     }
 
@@ -61,9 +68,8 @@ export default function AuthScreen({ navigation, route }: AuthScreenProps) {
         routes: [{ name: 'Preferences' }],
       });
     } catch (error: any) {
-      const errorMessage =
-        error.response?.data?.detail || 'Authentication failed. Please try again.';
-      Alert.alert('Error', errorMessage);
+      const { title, message } = formatErrorAlert(error);
+      Alert.alert(title, message);
     } finally {
       setLoading(false);
     }
