@@ -62,8 +62,7 @@ export default function CityRecommendationScreen({ navigation }: Props) {
             {
               text: 'Upgrade to Pro',
               onPress: () => {
-                // TODO: Navigate to paywall
-                Alert.alert('Coming Soon', 'Pro subscription will be available soon!');
+                navigation.navigate('Paywall', { source: 'rate_limit' });
               },
             },
           ]

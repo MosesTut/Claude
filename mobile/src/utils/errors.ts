@@ -194,44 +194,6 @@ export function parseApiError(error: any): AppError {
 }
 
 /**
- * Get error message for specific validation
- */
-export function getValidationError(field: string, value: any): string | null {
-  switch (field) {
-    case 'email':
-      if (!value) return 'Email is required';
-      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) {
-        return 'Please enter a valid email address';
-      }
-      return null;
-
-    case 'password':
-      if (!value) return 'Password is required';
-      if (value.length < 8) return 'Password must be at least 8 characters';
-      if (!/[A-Z]/.test(value)) return 'Password must contain at least one uppercase letter';
-      if (!/[a-z]/.test(value)) return 'Password must contain at least one lowercase letter';
-      if (!/[0-9]/.test(value)) return 'Password must contain at least one number';
-      return null;
-
-    case 'tripLength':
-      const num = parseInt(value);
-      if (isNaN(num)) return 'Please enter a valid number';
-      if (num < 1) return 'Trip must be at least 1 day';
-      if (num > 30) return 'Trip cannot exceed 30 days';
-      return null;
-
-    case 'interests':
-      if (!value || value.length === 0) {
-        return 'Please select at least one interest';
-      }
-      return null;
-
-    default:
-      return null;
-  }
-}
-
-/**
  * Format error for display in Alert
  */
 export function formatErrorAlert(error: any): { title: string; message: string } {
